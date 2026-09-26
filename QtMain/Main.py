@@ -56,14 +56,9 @@ class CommonContainer(QObject):
         mainLayout.setSpacing(0)
         OpenMenu = QPushButton()
         OpenMenu.setCursor(Qt.CursorShape.PointingHandCursor)
-        OpenMenu.setStyleSheet("""
-            background-color: #ffffff;
-            border: 1px solid #dcdcdc; 
-            border-bottom: 3px solid #b0b0b0; 
-            border-radius: 6px;
-        """)
 
         OpenMenu.setIcon(QIcon("resources/menu-button.png"))
+        OpenMenu.setText("hi")
         OpenMenu.setIconSize(QSize(35, 35))
 
         menu = Menu() #---- Menu Part
@@ -71,7 +66,7 @@ class CommonContainer(QObject):
         menu.button4.clicked.connect(lambda: self.Handler.handleLogout())
         containers = menu.containers()
 
-        mainLayout.addWidget(OpenMenu, alignment=Qt.AlignmentFlag.AlignLeft)
+        mainLayout.addWidget(OpenMenu, alignment=Qt.AlignmentFlag.AlignCenter)
         mainLayout.addWidget(containers, alignment=Qt.AlignmentFlag.AlignLeft)
         mainLayout.addStretch()
 
@@ -79,8 +74,7 @@ class CommonContainer(QObject):
 
         Column1.setStyleSheet("""
             background-color: white;
-            border-radius: 10px;
-            color:black;
+            color:blacks;
         """)
         # child widget
         return Column1

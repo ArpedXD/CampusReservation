@@ -12,9 +12,13 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QScrollArea,
     QStackedWidget, QListWidget, QListWidgetItem,
 )
+import ast
 
 from QFloor.flow_layout import FlowLayout
-from QFloor.rooms_data import SCHOOL_FLOORS
+
+SCHOOL_FLOORS = None
+with open("QFloor/rooms.json", 'r') as e:
+    SCHOOL_FLOORS = ast.literal_eval(e.read())
 
 
 class RoomCard(QFrame):
@@ -45,7 +49,6 @@ class RoomCard(QFrame):
 
         self.setStyleSheet("""
             QFrame#roomCard {
-                background-color: rgba(255, 255, 255, 235);
                 border: 1px solid #dcdcdc;
                 border-radius: 10px;
             }
@@ -110,9 +113,10 @@ class FloorBrowser(QWidget):
         self.floor_list.setFixedWidth(150)
         self.floor_list.setStyleSheet("""
             QListWidget { border: none; background: transparent; font-size: 13px; }
-            QListWidget::item { padding: 10px 12px; border-radius: 6px; }
+            QListWidget::item { padding: 10px 12px; border-radius: 6px; border: None; }
             QListWidget::item:selected { background-color: #23411A; color: white; }
         """)
+        self.floor_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.stack = QStackedWidget()
 

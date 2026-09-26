@@ -1,12 +1,10 @@
 from PySide6.QtWidgets import QWidget, QPushButton,QVBoxLayout 
 from PySide6.QtCore import Qt
-import random
 
 class Menu:
     def __init__(self):
         self.container = QWidget()
-        value = random.randint(1, 123)
-        self.button1 = QPushButton(f"Settings {value}")
+        self.button1 = QPushButton("Settings")
         self.button2 = QPushButton("Help")
         self.button3 = QPushButton("Profile")
         self.button4 = QPushButton("Logout")
@@ -26,6 +24,7 @@ class Menu:
                 background-color: #ffffff;
                 border: 1px solid #dcdcdc; 
                 border-bottom: 3px solid #b0b0b0; 
+                border-radius:None;
             """)
             each.setFixedSize(100,40)
             buttonLayout.addWidget(each)
