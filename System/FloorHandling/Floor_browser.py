@@ -14,10 +14,10 @@ from PySide6.QtWidgets import (
 )
 import ast
 
-from QFloor.flow_layout import FlowLayout
+from System.FloorHandling.flow_layout import FlowLayout
 
 SCHOOL_FLOORS = None
-with open("QFloor/rooms.json", 'r') as e:
+with open("System/FloorHandling/rooms.json", 'r') as e:
     SCHOOL_FLOORS = ast.literal_eval(e.read())
 
 
@@ -109,19 +109,28 @@ class FloorBrowser(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
+        self.floor_list_layout = QVBoxLayout()
         self.floor_list = QListWidget()
+        self.floor_list.setSpacing(5)
         self.floor_list.setFixedWidth(150)
         self.floor_list.setStyleSheet("""
             QListWidget { border: none; background: transparent; font-size: 13px; }
-            QListWidget::item { padding: 10px 12px; border-radius: 6px; border: None; }
+            QListWidget::item { padding: 10px 12px; border-radius: 6px; border: 1px solid 23411A;}
             QListWidget::item:selected { background-color: #23411A; color: white; }
         """)
         self.floor_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.stack = QStackedWidget()
-
+        self.RoomText = QLabel()
+        self.RoomText.setText("Rooms")
         for floor, buildings in SCHOOL_FLOORS.items():
-            self.floor_list.addItem(QListWidgetItem(floor))
+            listItem = QListWidgetItem(floor)
+            listItem.setToolTip(
+                f"""
+                    <p> Change to {floor}</p>
+                """
+            )
+            self.floor_list.addItem(listItem)
             page = FloorPage(floor, buildings)
             page.room_clicked.connect(self.room_selected.emit)
             self.stack.addWidget(page)
@@ -129,7 +138,10 @@ class FloorBrowser(QWidget):
         self.floor_list.currentRowChanged.connect(self.stack.setCurrentIndex)
         self.floor_list.setCurrentRow(0)
 
-        layout.addWidget(self.floor_list)
+        layout.addLayout(self.floor_list_layout)
+        self.floor_list_layout.addWidget(self.RoomText)
+        self.floor_list_layout.addWidget(self.floor_list)
+
         layout.addWidget(self.stack, stretch=1)
 
 

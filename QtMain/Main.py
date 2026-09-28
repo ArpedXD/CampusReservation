@@ -1,15 +1,17 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGraphicsBlurEffect, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QFrame
-from PySide6.QtCore import Qt, Signal, QObject, QRect, QRectF, QPoint
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGraphicsBlurEffect, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QFrame, QTimeEdit
+from PySide6.QtCore import Qt, Signal, QObject, QRect, QRectF, QPoint, QTime
 from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor, QFont, QPen, QBrush, QPainterPath, QLinearGradient
 from PySide6.QtCore import QSize
 
 from QtFilters.MenuHandler import MenuHandler
 from QtMenu.Menu import Menu
 from System.AccountHandling.Account import AccountHandler
-from QFloor.Floor_browser import FloorBrowser
+from System.FloorHandling.Floor_browser import FloorBrowser
+from QtMain.Compo.Reservation import Reservation
 
 class CommonContainer(QObject):
     NavigateToMenu = Signal(str)
+
     def __init__(self):
         super().__init__()
         self.form = None
@@ -23,10 +25,15 @@ class CommonContainer(QObject):
         self._profile_child = None
         self._resize_handler_installed = False
 
+        self.reservation = Reservation(self.container)
+
         self.unverified = QWidget(self.container)
         self.unverifiedWidget()
+
         self.profile = QWidget(self.container)
         self.ProfileWidget()
+        
+        self._install_container_resize_handler()
 
     def common(self):
         self.container.setStyleSheet("""background-color: qlineargradient(
@@ -44,9 +51,6 @@ class CommonContainer(QObject):
         layout = QHBoxLayout(self.container)
         layout.setContentsMargins(10,10,10,10)
         return layout
-    
-    def open_reservation_form(self, info: dict):
-        print(info)
 
     def LeftColumn(self):
         Column1 = self.Column1
@@ -58,7 +62,6 @@ class CommonContainer(QObject):
         OpenMenu.setCursor(Qt.CursorShape.PointingHandCursor)
 
         OpenMenu.setIcon(QIcon("resources/menu-button.png"))
-        OpenMenu.setText("hi")
         OpenMenu.setIconSize(QSize(35, 35))
 
         menu = Menu() #---- Menu Part
@@ -66,7 +69,7 @@ class CommonContainer(QObject):
         menu.button4.clicked.connect(lambda: self.Handler.handleLogout())
         containers = menu.containers()
 
-        mainLayout.addWidget(OpenMenu, alignment=Qt.AlignmentFlag.AlignCenter)
+        mainLayout.addWidget(OpenMenu, alignment=Qt.AlignmentFlag.AlignLeft)
         mainLayout.addWidget(containers, alignment=Qt.AlignmentFlag.AlignLeft)
         mainLayout.addStretch()
 
@@ -90,7 +93,7 @@ class CommonContainer(QObject):
 
         self.floor_browser = FloorBrowser()
         self.floor_browser.setFixedSize(Column2.width(), Column2.height())
-        self.floor_browser.room_selected.connect(self.open_reservation_form)
+        self.floor_browser.room_selected.connect(self.reservation.open_reservation_form)
         ColumnLayout.addWidget(self.floor_browser)
 
         def resize(event):
@@ -132,15 +135,15 @@ class CommonContainer(QObject):
             value = data.get(key)
             label.setText("—" if value is None or value == "" else str(value))
 
-    def _update_overlay_geometry(self, overlay, child):
+    def _update_overlay_geometry(self, overlay, child, width_ratio: float = 0.8, height_ratio: float = 0.8):
         if overlay is None or child is None:
             return
         w = self.container.width()
         h = self.container.height()
         overlay.setFixedSize(w, h)
         overlay.move(0, 0)
-        cw = int(w * 0.8)
-        ch = int(h * 0.8)
+        cw = int(w * width_ratio)
+        ch = int(h * height_ratio)
         child.setFixedSize(cw, ch)
         child.move(int(w * 0.5 - cw * 0.5), int(h * 0.5 - ch * 0.5))
 
@@ -152,10 +155,12 @@ class CommonContainer(QObject):
         def resizing(event):
             self._update_overlay_geometry(self.unverified, self._unverified_child)
             self._update_overlay_geometry(self.profile, self._profile_child)
+            self._update_overlay_geometry(self.reservation, self.reservation._reservation_child, 1, 0.55)
 
         self.container.resizeEvent = resizing
         self._update_overlay_geometry(self.unverified, self._unverified_child)
         self._update_overlay_geometry(self.profile, self._profile_child)
+        self._update_overlay_geometry(self.reservation, self.reservation.reservation_child, 1, 0.5)
 
     def ProfileWidget(self):
         """Builds the profile overlay like a frosted shower door: we photograph what's
@@ -412,7 +417,6 @@ class CommonContainer(QObject):
         ParentWidget.paintEvent = paint_overlay
         card.paintEvent = paint_card
  
-        self._install_container_resize_handler()
         return ParentWidget
 
     def unverifiedWidget(self):

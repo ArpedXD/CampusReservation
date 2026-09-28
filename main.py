@@ -2,12 +2,13 @@ import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from PySide6.QtGui import QIcon
 from QtMain.Main import CommonContainer
-from QtMain.AccUi import Form
+from QtMain.AccUI import Form
 from PySide6.QtCore import Signal, QTimer
 import asyncio
 import qasync
 from System.AccountHandling.Account import AccountHandler
 import ctypes
+
 
 myappid = "mycompany.myproduct.subproduct.version"
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
@@ -46,6 +47,7 @@ class MainWindow(QMainWindow):
         # Raises UI to profile AFTER widget
         self.main.profile.raise_()
         self.main.unverified.raise_()
+        self.main.reservation.raise_()
         return self.main.container
     
     def startcheck(self): # Handles function when the application starts
