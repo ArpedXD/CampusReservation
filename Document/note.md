@@ -7,4 +7,8 @@ self.updateReservedList([
 
 # For reservation Time:
 Use reference.py to replace the QLineEdit in Reservation.
-then create a reference.py returnTime() for its current time since its private.
+then create a reference.py returnTime() for its current time since its private variable.
+
+# Reservation backend
+add a request information fron reservationsystem then create a dedicated Post request
+in the backend
