@@ -36,8 +36,8 @@ class Reservation(QWidget):
         payload["time"] = self._reservation_time.text()
 
         try:
-            ReservationHandler.ReservationHandler(payload)
-            
+            ReservationHandler.ValidateReservation(payload)
+            ReservationHandler.RequestReservation(payload, self._reservation_error)
         except WrongData:
             return self._reservation_error.setText("Please Follow this format : 00:00AM-00:00AM")
         
