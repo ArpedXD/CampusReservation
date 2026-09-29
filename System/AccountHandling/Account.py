@@ -28,7 +28,7 @@ class AccountHandler:
                 submit.setEnabled(True)
                 submit.setText("Log in")
 
-        self.login_task = asyncio.create_task(_do_login())
+        asyncio.create_task(_do_login())
 
     def handleSignup(self, username, confirmpassword, password, submit, errorLabel):
         async def _do_login():
@@ -48,7 +48,7 @@ class AccountHandler:
                 submit.setEnabled(True)
                 submit.setText("Sign in")
 
-        self.signup_task = asyncio.create_task(_do_login())
+        asyncio.create_task(_do_login())
         
     def handleInformations(self):
         async def _handleInformations():
@@ -66,7 +66,7 @@ class AccountHandler:
                     window.main.updateVerificationOverlay(data["Verified"])
             except Exception as e:
                 print(str(e))
-        self.verify_task = asyncio.create_task(_handleInformations())
+        asyncio.create_task(_handleInformations())
 
     def handleVerify(self, first_name, last_name, year_level, college_course, student_id, err, verify_btn):
         Credentials = {
@@ -103,7 +103,7 @@ class AccountHandler:
                 err.setText(f"An Error has Occured : {e.response.json().get("detail")}")
             finally:
                 verify_btn.setEnabled(True)
-        self.verify_account_task = asyncio.create_task(_verify())
+        verify_account_task = asyncio.create_task(_verify())
 
     def handleLogout(self):
         application = QApplication.instance()
@@ -124,7 +124,7 @@ class AccountHandler:
                 pass
             except Exception as e:
                 print(e.response.json().get("detail"))
-        self.fetch_data = asyncio.create_task(_handleData())
+        fetch_data = asyncio.create_task(_handleData())
 
     def handleDelete(self, err):
         async def delete_data():
@@ -143,4 +143,4 @@ class AccountHandler:
                 err.setText("Connectivity Error...")
             except Exception as e:
                 err.setText(e.response.json().get("detail"))
-        self.delete_data = asyncio.create_task(delete_data())
+        asyncio.create_task(delete_data())

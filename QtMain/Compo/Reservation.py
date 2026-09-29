@@ -1,7 +1,9 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QFrame
 from PySide6.QtCore import Qt, Signal, QRect, QRectF, QPoint
 from PySide6.QtGui import QPixmap, QPainter, QColor,  QPen, QBrush, QPainterPath, QLinearGradient
-from System.ReservationHandling.ReservationValidation import ReservationValidation
+from System.ReservationHandling.ReservationHandler import ReservationHandler
+
+from ErrorTypes.DetailErrors import WrongData
 class Reservation(QWidget):
     ReservationConfirmed = Signal(dict)
     def __init__(self, container):
@@ -32,11 +34,14 @@ class Reservation(QWidget):
 
         payload = dict(self._reservation_info)
         payload["time"] = self._reservation_time.text()
-        pattern = r"^(0[1-9]|1[0-2]):[0-5][0-9](AM|PM)-(0[1-9]|1[0-2]):[0-5][0-9](AM|PM)$"
-        if not re.fullmatch(pattern, payload["time"]):
+
+        try:
+            ReservationHandler.ReservationHandler(payload)
+            
+        except WrongData:
             return self._reservation_error.setText("Please Follow this format : 00:00AM-00:00AM")
+        
         self.ReservationConfirmed.emit(payload)
-        self._reservation_error.setText("")
         self.setHidden(True)
 
     def ReservationWidget(self):
