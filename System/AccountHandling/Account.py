@@ -103,7 +103,7 @@ class AccountHandler:
                 err.setText(f"An Error has Occured : {e.response.json().get("detail")}")
             finally:
                 verify_btn.setEnabled(True)
-        verify_account_task = asyncio.create_task(_verify())
+        asyncio.create_task(_verify())
 
     def handleLogout(self):
         application = QApplication.instance()
@@ -119,12 +119,12 @@ class AccountHandler:
                     return
                 app_instance = QApplication.instance()
                 
-                app_instance.mainwindow.main.ChangeProfileCredentials(data)
+                app_instance.mainwindow.main.profile.ChangeProfileCredentials(data)
             except httpx.ConnectError:
                 pass
             except Exception as e:
                 print(e.response.json().get("detail"))
-        fetch_data = asyncio.create_task(_handleData())
+        asyncio.create_task(_handleData())
 
     def handleDelete(self, err):
         async def delete_data():
@@ -144,3 +144,18 @@ class AccountHandler:
             except Exception as e:
                 err.setText(e.response.json().get("detail"))
         asyncio.create_task(delete_data())
+
+    def getusernames(self):
+        async def getusername():
+            try:
+                data = await self.reqClass.GetInformations()
+                if data is None:
+                    return
+                app_instance = QApplication.instance()
+
+                app_instance.mainwindow.nav_name.setText(f"{data["Last_name"]}, {data["First_name"]}")
+            except httpx.ConnectError:
+                pass
+            except Exception as e:
+                print(e.response.json().get("detail"))
+        asyncio.create_task(getusername())

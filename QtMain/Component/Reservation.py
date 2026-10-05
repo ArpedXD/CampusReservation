@@ -1,9 +1,11 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QFrame
-from PySide6.QtCore import Qt, Signal, QRect, QRectF, QPoint
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QFrame, QSizePolicy, QGridLayout
+from PySide6.QtCore import Qt, Signal, QRect, QRectF, QPoint, QDate
 from PySide6.QtGui import QPixmap, QPainter, QColor,  QPen, QBrush, QPainterPath, QLinearGradient
 from System.ReservationHandling.ReservationHandler import ReservationHandler
-
+from QtMain.Component.dependencies.Calendar import CustomCalendar
 from ErrorTypes.DetailErrors import WrongData
+
+
 class Reservation(QWidget):
     ReservationConfirmed = Signal(dict)
     def __init__(self, container):
@@ -14,17 +16,15 @@ class Reservation(QWidget):
         self.ReservationWidget()
         
     def open_reservation_form(self, info: dict):
-        """Fills the card from whatever FloorBrowser hands over — for example
-        {'building': 'Phinma Hall', 'floor': 'Ground Floor', 'room': 'Lobby'} —
-        then reveals it. A missing key prints an em dash instead of crashing,
-        the same defensive habit updateUnverifiedFields already uses below."""
         self._reservation_info = info or {}
         self._reservation_building.setText(str(self._reservation_info.get("building", "—")))
         self._reservation_floor.setText(str(self._reservation_info.get("floor", "—")))
         self._reservation_room.setText(str(self._reservation_info.get("room", "—")))
+        ReservationHandler.GetReservation(info, self)
         self.setHidden(False)
 
     def _cancel_reservation(self):
+        self._reservation_calendar.hide()
         self.setHidden(True)
 
     def _confirm_reservation(self):
@@ -33,22 +33,22 @@ class Reservation(QWidget):
             return
 
         payload = dict(self._reservation_info)
-        payload["time"] = self._reservation_time.text()
+        payload["time"], payload["purposes"], payload["date"] = self._reservation_time.text(), self._reservation_purposes.text(), self._reservation_date.text()
 
         try:
             ReservationHandler.ValidateReservation(payload)
             ReservationHandler.RequestReservation(payload, self._reservation_error)
-        except WrongData:
-            return self._reservation_error.setText("Please Follow this format : 00:00AM-00:00AM")
+        except WrongData as e:
+            return self._reservation_error.setText(e.detail)
         
         self.ReservationConfirmed.emit(payload)
         self.setHidden(True)
 
     def ReservationWidget(self):
-        """Builds the reservation overlay like a booking counter with two windows: the wider
-        left window is where you book your slot, the narrower right one is the queue board of
-        people already booked. They share one row, so their heights always match. Why: you
-        can spot clashes before pressing Confirm."""
+        """Builds the reservation overlay like a two-storey booking counter: the upper floor
+        is where you book your slot, the lower floor is the queue board of people already
+        booked. They share one column, so their widths always match. Why: you can spot
+        clashes before pressing Confirm."""
 
         ParentWidget = self
         ParentWidget.setHidden(True)
@@ -59,17 +59,35 @@ class Reservation(QWidget):
         # Shared state for the frosted-glass effect
         glass = {"blurred": None, "capturing": False}
 
-        # ── The row (self._reservation_child is what the resize handler positions/sizes).
-        # It is now an invisible tray that holds BOTH cards side by side. ──────────────
-        self._reservation_child = QWidget(ParentWidget)
-        row = self._reservation_child
+        # ── The column tray (self._reservation_child). It is an invisible tray that holds
+        # BOTH cards, one above the other. A layout (added just below) now sizes it, so
+        # it stretches with whatever column this widget is placed in. ───────────────────
+        self.reservation_child = QWidget(ParentWidget)
+        self.reservation_child.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding
+        )
+        row = self.reservation_child
         row.setObjectName("reservationRow")
         row.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        # Give the overlay its own layout so the tray always fills it. Analogy: a picture
+        # frame that resizes with the wall, instead of a picture hung by hand that stays
+        # put when the wall grows. Why: the layout does the sizing, so any parent layout
+        # that stretches this widget (e.g. ColumnLayout.addWidget(self.reservation,
+        # stretch=3)) stretches the cards with it.
+        root_layout = QVBoxLayout(ParentWidget)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
+        root_layout.addWidget(row)
+
+        ParentWidget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         def make_glass_card(name: str) -> QWidget:
             card = QWidget(row)
             card.setObjectName(name)
             card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             shadow = QGraphicsDropShadowEffect(card)
             shadow.setBlurRadius(40)
             shadow.setOffset(0, 8)
@@ -77,10 +95,33 @@ class Reservation(QWidget):
             card.setGraphicsEffect(shadow)
             return card
 
-        reserve_card = make_glass_card("reservationCard")   # left: book a room
-        reserved_card = make_glass_card("reservedCard")     # right: who already booked
+        # The scroll area that wraps the top card. Like a window with its frame removed
+        # and its glass swapped for clear glass: Qt draws a thin gray frame on every
+        # QScrollArea by default, and the parent column's white background paints behind
+        # the viewport. Both showed up as a weird gray line, so we remove the frame and
+        # make the viewport see-through. Why: only the glass card should be visible.
+        scrollEffectReserve_card = QScrollArea()
+        scrollEffectReserve_card.setObjectName("reserveScroll")
+        scrollEffectReserve_card.setWidgetResizable(True)
+        scrollEffectReserve_card.setFrameShape(QFrame.Shape.NoFrame)
+        scrollEffectReserve_card.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        # ══ LEFT CARD: reserve (same widgets and attribute names as before) ═══════════
+        reserve_viewport = scrollEffectReserve_card.viewport()
+        reserve_viewport.setObjectName("reserveViewport")
+        reserve_viewport.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        reserve_viewport.setAutoFillBackground(False)
+
+        scrollEffectReserve_card.setStyleSheet("""
+            QScrollArea#reserveScroll   { background: transparent; border: none; }
+            QWidget#reserveViewport     { background: transparent; border: none; }
+        """)
+
+        reserve_card = make_glass_card("reservationCard")   # top: book a room
+        reserved_card = make_glass_card("reservedCard")     # bottom: who already booked
+
+        scrollEffectReserve_card.setWidget(reserve_card)
+
+        # ══ TOP CARD: reserve (same widgets and attribute names as before) ════════════
 
         # ── Title ─────────────────────────────────────────────────────────────
         title = QLabel("Confirm Reservation")
@@ -91,8 +132,8 @@ class Reservation(QWidget):
         info_panel.setObjectName("reservationInfoPanel")
         info_panel.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         info_layout = QVBoxLayout(info_panel)
-        info_layout.setContentsMargins(16, 14, 16, 14)
-        info_layout.setSpacing(10)
+        info_layout.setContentsMargins(0, 0, 0, 0)
+        info_layout.setSpacing(0)
 
         def make_info_row(caption: str) -> QLabel:
             info_row = QHBoxLayout()
@@ -130,19 +171,69 @@ class Reservation(QWidget):
         time_layout.addWidget(self._reservation_time)
         time_layout.addStretch(1)
 
+        reserv_caption = QLabel("Reservation Purposes")
+        reserv_caption.setObjectName("ReservationPurposes")
+
+        self._reservation_purposes = QLineEdit()
+        self._reservation_purposes.setObjectName("reservationTimeInput")
+        self._reservation_purposes.setMinimumHeight(42)
+
+        time_layout.addWidget(reserv_caption)
+        time_layout.addWidget(self._reservation_purposes)
+        time_layout.addStretch(1)
+
+        # ── Preferred date: caption + calendar button on one row, line edit below ──
+        reservation_date = QLabel("Preferred date (MM/DD/YYYY)")
+        reservation_date.setObjectName("reservationCaption")
+
+        calendar_btn = QPushButton("📅")
+        calendar_btn.setObjectName("reservationCalendarButton")
+        calendar_btn.setFixedSize(32, 26)
+        calendar_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        calendar_btn.setToolTip("Pick a date")
+
+        date_header = QHBoxLayout()
+        date_header.setContentsMargins(0, 0, 0, 0)
+        date_header.setSpacing(8)
+        date_header.addWidget(reservation_date)
+        date_header.addStretch(1)
+        date_header.addWidget(calendar_btn)
+
+        self._reservation_date = QLineEdit()
+        self._reservation_date.setObjectName("reservationTimeInput")
+        self._reservation_date.setMinimumHeight(42)
+        self._reservation_date.setPlaceholderText("MM/DD/YYYY")
+
+        # Our own calendar popup (see CustomCalendar above). It floats over the cards and
+        # closes itself when you click outside it or pick a day.
+        self._reservation_calendar = CustomCalendar(self)
+        self._reservation_calendar.setMinimumDate(QDate.currentDate())  # no past dates; remove if unwanted
+
+        def toggle_calendar():
+            cal = self._reservation_calendar
+            if cal.isVisible():
+                cal.hide()
+                return
+            # Open on the date already typed in, if it's valid
+            typed = QDate.fromString(self._reservation_date.text().strip(), "MM/dd/yyyy")
+            cal.openBelow(calendar_btn, typed)
+
+        def on_date_picked(date: QDate):
+            self._reservation_date.setText(date.toString("MM/dd/yyyy"))
+
+        calendar_btn.clicked.connect(toggle_calendar)
+        self._reservation_calendar.dateSelected.connect(on_date_picked)
+
+        time_layout.addLayout(date_header)
+        time_layout.addWidget(self._reservation_date)
+        time_layout.addStretch(1)
+
         # ── Error label (stays in the layout; just empty text when nothing's wrong,
         # same habit as unverifiedError above) ────────────────────────────────
         self._reservation_error = QLabel("")
         self._reservation_error.setObjectName("reservationError")
         self._reservation_error.setWordWrap(True)
         self._reservation_error.setAlignment(Qt.AlignmentFlag.AlignVCenter)
-
-        # ── Cancel / Confirm ─────────────────────────────────────────────────
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.setObjectName("reservationCancelButton")
-        cancel_btn.setMinimumHeight(42)
-        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        cancel_btn.clicked.connect(self._cancel_reservation)
 
         confirm_btn = QPushButton("Confirm")
         confirm_btn.setObjectName("reservationConfirmButton")
@@ -153,7 +244,6 @@ class Reservation(QWidget):
         buttons = QHBoxLayout()
         buttons.setContentsMargins(0, 0, 0, 0)
         buttons.setSpacing(12)
-        buttons.addWidget(cancel_btn)
         buttons.addWidget(confirm_btn)
 
         # ── Assemble with stretch factors so inner sections scale with the card ──
@@ -166,7 +256,7 @@ class Reservation(QWidget):
         card_layout.addWidget(self._reservation_error, stretch=1)
         card_layout.addLayout(buttons, stretch=2)
 
-        # ══ RIGHT CARD: "Already reserved" scrollable board ═══════════════════════════
+        # ══ BOTTOM CARD: "Already reserved" scrollable board ══════════════════════════
 
         reserved_title = QLabel("Already Reserved")
         reserved_title.setObjectName("reservedTitle")
@@ -212,13 +302,13 @@ class Reservation(QWidget):
         reserved_layout.addLayout(reserved_header)
         reserved_layout.addWidget(reserved_scroll, stretch=1)
 
-        # ══ ROW: both cards side by side. Same row = same height. 5 : 4 keeps the
-        # reserve card a little wider than the board. Side margins stop the cards
-        # from touching the window edges (the resize handler gives this row full width). ══
-        row_layout = QHBoxLayout(row)
+        # ══ COLUMN: both cards stacked, reserve card on top, board below. Same column =
+        # same width. 6 : 4 gives the form a bit more height than the board. Side margins
+        # stop the cards from touching the window edges. ══
+        row_layout = QVBoxLayout(row)
         row_layout.setContentsMargins(24, 0, 24, 0)
         row_layout.setSpacing(16)
-        row_layout.addWidget(reserve_card, stretch=5)
+        row_layout.addWidget(scrollEffectReserve_card, stretch=6)
         row_layout.addWidget(reserved_card, stretch=4)
 
         # ── Glassmorphism: white glaze, dark high-contrast text ──────────────
@@ -248,6 +338,15 @@ class Reservation(QWidget):
                 background: transparent; border: none;
             }
             QLabel#reservationCaption {
+                font-size: 12px; font-weight: 700; color: #3A4756;
+                background: transparent; border: none;
+            }
+
+            QWidget#ReservationPurposes{
+                font-size: 12px; font-weight: 700; color: #3A4756;
+                background: transparent; border: none;
+            }
+            QLabel#ReservationPurposes {
                 font-size: 12px; font-weight: 700; color: #3A4756;
                 background: transparent; border: none;
             }
@@ -290,6 +389,14 @@ class Reservation(QWidget):
             QPushButton#reservationConfirmButton:hover    { background-color: #24647F; }
             QPushButton#reservationConfirmButton:pressed  { background-color: #0F323F; }
             QPushButton#reservationConfirmButton:disabled { background-color: #7FA3B0; color: #EAF2F5; }
+
+            QPushButton#reservationCalendarButton {
+                background-color: rgba(255, 255, 255, 200); color: #16212C;
+                border: 1px solid rgba(22, 33, 44, 140); border-radius: 8px;
+                font-size: 13px;
+            }
+            QPushButton#reservationCalendarButton:hover   { background-color: rgba(255, 255, 255, 240); }
+            QPushButton#reservationCalendarButton:pressed { background-color: #FFFFFF; }
 
             /* ── "Already reserved" board ── */
             QLabel#reservedTitle {

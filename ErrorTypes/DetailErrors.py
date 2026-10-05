@@ -6,5 +6,6 @@ class BlankInputsError(Exception):
 
 class WrongData(Exception):
     """RAISE IF THERE ARE MISTAKES IN FORMAT"""
-    def __init__(self, *args):
+    def __init__(self, *args, detail):
         super().__init__(*args)
+        self.detail = detail

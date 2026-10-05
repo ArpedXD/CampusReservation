@@ -1,6 +1,7 @@
 import sys  
-from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget
-from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QVBoxLayout, QHBoxLayout, QWidget, QLabel
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QPixmap
 from QtMain.Main import CommonContainer
 from QtMain.AccUI import Form
 from PySide6.QtCore import Signal, QTimer
@@ -21,7 +22,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon("resources/SJC_LOGO.png"))
         self.setMinimumSize(1200,600)
         self.stack = QStackedWidget()
-
+        self.nav_name = QLabel("John")
         self.form = Form()
         self.main = None
 
@@ -39,19 +40,43 @@ class MainWindow(QMainWindow):
 
     def DoubleColumn(self):
         self.main = CommonContainer()
-        layout = self.main.common()
 
-        layout.addWidget(self.main.LeftColumn(), stretch=1)
-        layout.addWidget(self.main.RightColumn(), stretch=3)
+        fl = QVBoxLayout(self.main.container)
+        fl.setContentsMargins(0,0,0,0)
+
+        nav_bar = QWidget()
+        nav_bar.setStyleSheet("background-color: #23411A; font-size: 14px; font-weight: 700;")
+        nav_barLayout = QHBoxLayout(nav_bar)
+        schoolLogo = QPixmap("resources/SJC_LOGO.png")
+        
+        nav_label = QLabel("Campus Reservation")
+        nav_name = self.nav_name
+        logo = QLabel()
+        logo.setFixedSize(50,50)
+        logo.setPixmap(schoolLogo)
+        logo.setScaledContents(True)
+        nav_barLayout.addWidget(logo)
+        nav_barLayout.addWidget(nav_label, alignment=Qt.AlignmentFlag.AlignLeft)
+        nav_barLayout.addStretch()
+        nav_barLayout.addWidget(nav_name, alignment=Qt.AlignmentFlag.AlignRight)
+
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
+
+        fl.addWidget(nav_bar, stretch=1)
+        fl.addLayout(layout, stretch=10)
+
+        layout.addWidget(self.main.firstColumn(), stretch=1)
+        layout.addWidget(self.main.secondColumn(), stretch=3)
+        layout.addWidget(self.main.thirdColumn(), stretch=2)
 
         # Raises UI to profile AFTER widget
-        self.main.profile.raise_()
         self.main.unverified.raise_()
-        self.main.reservation.raise_()
         return self.main.container
     
     def startcheck(self): # Handles function when the application starts
         self.VerifyLoginSync = AccountHandler().handleInformations()
+        AccountHandler().getusernames()
 
     def stackHandler(self, stacks):
         if stacks == "Form":

@@ -1,100 +1,99 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGraphicsBlurEffect, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QFrame, QTimeEdit
-from PySide6.QtCore import Qt, Signal, QObject, QRect, QRectF, QPoint, QTime
-from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor, QFont, QPen, QBrush, QPainterPath, QLinearGradient
-from PySide6.QtCore import QSize
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QStackedWidget, QFrame
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPixmap, QPainter, QColor, QBrush, QPainterPath, QLinearGradient, QRadialGradient
 
-from QtFilters.MenuHandler import MenuHandler
 from QtMenu.Menu import Menu
 from System.AccountHandling.Account import AccountHandler
 from System.FloorHandling.Floor_browser import FloorBrowser
-from QtMain.Compo.Reservation import Reservation
+from QtMain.Component.Reservation import Reservation
+from QtMain.Component.home import Home
+from QtMain.Component.profile import Profile
 
-class CommonContainer(QObject):
+class CommonContainer(QWidget):
     NavigateToMenu = Signal(str)
 
     def __init__(self):
         super().__init__()
         self.form = None
         self.container = QWidget()
+        self.container.setStyleSheet("background-color: rgba(200,200,200,1);")
         self.Column1 = QWidget()
         self.Column2 = QWidget()
+        self.Column3 = QWidget()
+        self.Column3.hide()
         self.NavigateToMenu.connect(self.menunavigation)
         self.Handler = AccountHandler()
 
         self._unverified_child = None
-        self._profile_child = None
         self._resize_handler_installed = False
-
-        self.reservation = Reservation(self.container)
 
         self.unverified = QWidget(self.container)
         self.unverifiedWidget()
 
-        self.profile = QWidget(self.container)
-        self.ProfileWidget()
-        
+        self.reservation = Reservation(self.container)
+
+        # The profile is a stack page now (no parent here): secondColumn() adopts it
+        self.profile = Profile()
+
         self._install_container_resize_handler()
 
-    def common(self):
-        self.container.setStyleSheet("""background-color: qlineargradient(
-            spread: pad,
-            x1: 0,
-            y1: 0,
-            x2: 1,
-            y2: 1,
-            stop: 0 rgba(42, 123, 155, 255),
-            stop: 0.45 rgba(87, 199, 133, 255),
-            stop: 0.77 rgba(175, 212, 104, 255),
-            stop: 1 rgba(237, 221, 83, 255)
-        );""")
 
-        layout = QHBoxLayout(self.container)
-        layout.setContentsMargins(10,10,10,10)
-        return layout
-
-    def LeftColumn(self):
+    def firstColumn(self):
         Column1 = self.Column1
-        
+        Column1.setObjectName("sideMenu")
+        Column1.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        Column1.setMinimumWidth(200)
+    
         mainLayout = QVBoxLayout(Column1)
-        mainLayout.setContentsMargins(10, 10, 10, 10)
+        mainLayout.setContentsMargins(12, 16, 12, 16)
         mainLayout.setSpacing(0)
-        OpenMenu = QPushButton()
-        OpenMenu.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        OpenMenu.setIcon(QIcon("resources/menu-button.png"))
-        OpenMenu.setIconSize(QSize(35, 35))
-
+    
         menu = Menu() #---- Menu Part
+        menu.button1.clicked.connect(lambda: self.NavigateToMenu.emit("Home"))
+        menu.button2.clicked.connect(lambda: self.NavigateToMenu.emit("Reserve"))
         menu.button3.clicked.connect(lambda: self.NavigateToMenu.emit("Profile")) # connects button to navigation (note to self: Connect the other buttons through this way aswell)
-        menu.button4.clicked.connect(lambda: self.Handler.handleLogout())
+        menu.button4.clicked.connect(lambda: print("placeholder palang")) # facilities
+        menu.button5.clicked.connect(lambda: print("placeholder palang")) # suggestion / feedback - REMOVE self.Handler.handleLogout() ASAP
+        menu.button6.clicked.connect(lambda: self.Handler.handleLogout()) # Settings
+
         containers = menu.containers()
-
-        mainLayout.addWidget(OpenMenu, alignment=Qt.AlignmentFlag.AlignLeft)
-        mainLayout.addWidget(containers, alignment=Qt.AlignmentFlag.AlignLeft)
+    
+        mainLayout.addWidget(containers)  # no left-alignment: buttons fill the sidebar width
         mainLayout.addStretch()
-
-        OpenMenu.clicked.connect(lambda: MenuHandler().visibility(containers))
-
+    
+        # The "#sideMenu" selector keeps this style on the column only,
+        # so it no longer leaks into every child widget.
         Column1.setStyleSheet("""
-            background-color: white;
-            color:blacks;
+            #sideMenu {
+                background-color: #ffffff;
+                border-right: 1px solid #e5e7eb;
+            }
         """)
         # child widget
         return Column1
 
-    def RightColumn(self):
+    def secondColumn(self):
         Column2 = self.Column2
         Column2.setStyleSheet("""
             background-color: white;
-            border-radius: 10px;
             color:black;
         """)
         ColumnLayout = QVBoxLayout(Column2)
+        ColumnLayout.setContentsMargins(0,0,0,0)
+        ColumnLayout.setSpacing(0)
 
         self.floor_browser = FloorBrowser()
         self.floor_browser.setFixedSize(Column2.width(), Column2.height())
         self.floor_browser.room_selected.connect(self.reservation.open_reservation_form)
-        ColumnLayout.addWidget(self.floor_browser)
+
+        self.main_stack = QStackedWidget()
+        self.home = Home()
+
+        self.main_stack.addWidget(self.home)
+        self.main_stack.addWidget(self.floor_browser)
+        self.main_stack.addWidget(self.profile)   # index 2: fills Column2 like any other page
+
+        ColumnLayout.addWidget(self.main_stack)
 
         def resize(event):
             self.floor_browser.setFixedSize(Column2.width(), Column2.height())
@@ -102,21 +101,37 @@ class CommonContainer(QObject):
         Column2.resizeEvent = resize
 
         return Column2
+    
+    def thirdColumn(self):
+        Column3 = self.Column3
+        Column3.setStyleSheet("""
+            background-color: white;
+            color:black;
+        """)
+        ColumnLayout = QVBoxLayout(Column3)
+        ColumnLayout.addWidget(self.reservation)
+
+        def resize(event):
+            self.reservation.reservation_child.setFixedSize(Column3.width(), Column3.height())
+
+        Column3.resizeEvent = resize
+        return Column3
 
     def menunavigation(self, target):
+        if target == "Home":
+            self.main_stack.setCurrentIndex(0)
+            self.Column3.hide()
+            return
+        if target == "Reserve":
+            self.main_stack.setCurrentIndex(1)
+            self.Column3.show()
+            self.Column3.resize(self.Column3.width() * 1.5, self.Column3.height() * 1.5)
+            return
         if target == "Profile":
             self.Handler.handleFetchData()
-            if self.profile.isHidden():
-                return self.profile.setHidden(False)
-            return self.profile.setHidden(True)
-        
-    def ChangeProfileCredentials(self, credentials: dict):
-        print('test')
-        self._profile_username.setText(f"{credentials["Last_name"]}, {credentials["First_name"]}")
-        self._profile_email.setText(credentials["Email"])
-        self._profile_year_level.setText(f"Year {credentials["Year_Level"]}")
-        self._profile_course.setText(credentials["College_course"])
-        self._profile_student_id.setText(credentials["student_id"])
+            self.main_stack.setCurrentIndex(2)
+            self.Column3.hide()
+            return
 
     def updateVerificationOverlay(self, verified: bool):
         self.unverified.setHidden(verified)
@@ -153,271 +168,13 @@ class CommonContainer(QObject):
         self._resize_handler_installed = True
 
         def resizing(event):
+            # Only the unverified overlay floats over the container now;
+            # the profile lives inside Column2's stack and sizes itself.
             self._update_overlay_geometry(self.unverified, self._unverified_child)
-            self._update_overlay_geometry(self.profile, self._profile_child)
-            self._update_overlay_geometry(self.reservation, self.reservation._reservation_child, 1, 0.55)
 
         self.container.resizeEvent = resizing
         self._update_overlay_geometry(self.unverified, self._unverified_child)
-        self._update_overlay_geometry(self.profile, self._profile_child)
-        self._update_overlay_geometry(self.reservation, self.reservation.reservation_child, 1, 0.5)
 
-    def ProfileWidget(self):
-        """Builds the profile overlay like a frosted shower door: we photograph what's
-        behind the glass, smudge it soft, and paint that under the card, so the
-        background looks blurred while the text on top stays sharp. Why: Qt's blur
-        effect would smear the text too."""
-        ParentWidget = self.profile
-        ParentWidget.setHidden(True)
-        ParentWidget.setObjectName("profileOverlay")
-        ParentWidget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        # Own rule so the container's gradient stylesheet doesn't leak into the overlay
-        ParentWidget.setStyleSheet("QWidget#profileOverlay { background: transparent; }")
- 
-        # Shared state for the frosted-glass effect
-        glass = {"blurred": None, "capturing": False}
- 
-        # ── The card (self._profile_child is what the resize handler positions/sizes) ──
-        self._profile_child = QWidget(ParentWidget)
-        card = self._profile_child
-        card.setObjectName("profileCard")
-        card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
- 
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(40)
-        shadow.setOffset(0, 8)
-        shadow.setColor(QColor(0, 0, 0, 45))
-        card.setGraphicsEffect(shadow)
- 
-        # ── 1) Close button (top right) ──────────────────────────────────────
-        close_btn = QPushButton("×")
-        close_btn.setObjectName("profileClose")
-        close_btn.setToolTip("Close")
-        close_btn.setFixedSize(32, 32)
-        close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        close_btn.clicked.connect(lambda: self.NavigateToMenu.emit("Profile"))
- 
-        # ── 3) Credentials header ────────────────────────────────────────────
-        header = QWidget()
-        header.setObjectName("profileHeader")
-        header.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        header_row = QHBoxLayout(header)
-        header_row.setContentsMargins(16, 12, 16, 12)
-        header_row.setSpacing(16)
- 
-        # Picture placeholder (QPixmap drawn in code, so no image file is needed).
-        # Swap it later with: self._profile_picture.setPixmap(QPixmap("path/to/photo.png"))
-        placeholder = QPixmap(128, 128)
-        placeholder.fill(Qt.GlobalColor.transparent)
-        p = QPainter(placeholder)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        circle = QPainterPath()
-        circle.addEllipse(0, 0, 128, 128)
-        p.setClipPath(circle)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(255, 255, 255, 170))
-        p.drawEllipse(0, 0, 128, 128)           # plate
-        p.setBrush(QColor(30, 42, 58, 110))
-        p.drawEllipse(44, 24, 40, 40)           # head
-        p.drawEllipse(24, 76, 80, 80)           # shoulders (clipped by the circle)
-        p.end()
- 
-        avatar = QLabel()
-        avatar.setObjectName("profileAvatar")
-        avatar.setFixedSize(64, 64)
-        avatar.setScaledContents(True)
-        avatar.setPixmap(placeholder)
-        self._profile_picture = avatar
- 
-        def make_label(name: str, text: str) -> QLabel:
-            label = QLabel(text)
-            label.setObjectName(name)
-            return label
- 
-        # Fill these later, e.g. self._profile_username.setText("arp")
-        self._profile_username = make_label("profileUsername", "Username")
-        self._profile_email = make_label("profileDetail", "Email")
-        self._profile_year_level = make_label("profileDetail", "Year level")
-        self._profile_course = make_label("profileDetail", "Course")
-        self._profile_student_id = make_label("profileDetail", "Student ID")
- 
-        details = QHBoxLayout()
-        details.setContentsMargins(0, 0, 0, 0)
-        details.setSpacing(14)
-        details.addWidget(self._profile_email)
-        details.addWidget(self._profile_year_level)
-        details.addWidget(self._profile_course)
-        details.addWidget(self._profile_student_id)
-        details.addStretch(1)
- 
-        info = QVBoxLayout()
-        info.setContentsMargins(0, 0, 0, 0)
-        info.setSpacing(4)
-        info.addStretch(1)
-        info.addWidget(self._profile_username)
-        info.addLayout(details)
-        info.addStretch(1)
- 
-        role = QLabel("STUDENT")
-        role.setObjectName("profileRole")
-        role.setAlignment(Qt.AlignmentFlag.AlignCenter)
- 
-        header_row.addWidget(avatar, alignment=Qt.AlignmentFlag.AlignVCenter)
-        header_row.addLayout(info, stretch=1)
-        header_row.addWidget(role, alignment=Qt.AlignmentFlag.AlignVCenter)
- 
-        # ── 4) Blank scrollable plate ────────────────────────────────────────
-        scroll = QScrollArea()
-        scroll.setObjectName("profileScroll")
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
- 
-        # The viewport is the glass pane; the plate scrolls on top of it
-        viewport = scroll.viewport()
-        viewport.setObjectName("profileViewport")
-        viewport.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        viewport.setAutoFillBackground(False)
- 
-        plate = QWidget()
-        plate.setObjectName("profilePlate")
-        scroll.setWidget(plate)
-        plate.setAutoFillBackground(False)   # setWidget() turns it on; glass must show through
- 
-        # Empty for now: add future content with self._profile_body_layout.addWidget(...)
-        self._profile_body_layout = QVBoxLayout(plate)
-        self._profile_body_layout.setContentsMargins(16, 16, 16, 16)
-        self._profile_body_layout.addStretch(1)
- 
-        # ── Card skeleton: close row, header (~10%), scroll body (~90%) ──────
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(20, 14, 20, 20)
-        card_layout.setSpacing(12)
- 
-        top_bar = QHBoxLayout()
-        top_bar.setContentsMargins(0, 0, 0, 0)
-        top_bar.addStretch(1)
-        top_bar.addWidget(close_btn)
- 
-        card_layout.addLayout(top_bar)
-        card_layout.addWidget(header, stretch=1)
-        card_layout.addWidget(scroll, stretch=9)
- 
-        # ── 5) Glassmorphism (white) ─────────────────────────────────────────
-        card.setStyleSheet("""
-            * { font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif; }
- 
-            QWidget#profileCard { background: transparent; border: none; }
- 
-            QWidget#profileHeader {
-                background-color: rgba(255, 255, 255, 90);
-                border: 1px solid rgba(255, 255, 255, 190);
-                border-radius: 18px;
-            }
- 
-            QScrollArea#profileScroll { background: transparent; border: none; }
-            QWidget#profileViewport {
-                background-color: rgba(255, 255, 255, 70);
-                border: 1px solid rgba(255, 255, 255, 190);
-                border-radius: 18px;
-            }
-            QWidget#profilePlate { background: transparent; }
- 
-            QScrollBar:vertical { background: transparent; width: 8px; margin: 8px 0 8px 0; }
-            QScrollBar::handle:vertical { background: rgba(255, 255, 255, 200); border-radius: 4px; min-height: 28px; }
-            QScrollBar::handle:vertical:hover { background: rgba(255, 255, 255, 255); }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
- 
-            QLabel { background: transparent; border: none; color: #1E2A3A; }
-            QLabel#profileAvatar   { border: 2px solid rgba(255, 255, 255, 220); border-radius: 32px; }
-            QLabel#profileUsername { font-size: 18px; font-weight: 800; color: #1E2A3A; }
-            QLabel#profileDetail   { font-size: 12px; font-weight: 600; color: #4A5868; }
-            QLabel#profileRole {
-                background-color: rgba(255, 255, 255, 140);
-                border: 1px solid rgba(255, 255, 255, 220);
-                border-radius: 12px;
-                padding: 4px 14px;
-                font-size: 12px; font-weight: 800; color: #1E2A3A;
-            }
- 
-            QPushButton#profileClose {
-                background: transparent; color: #1E2A3A;
-                border: 1px solid transparent; border-radius: 16px;
-                font-size: 20px; font-weight: 600;
-            }
-            QPushButton#profileClose:hover   { background-color: rgba(255, 255, 255, 170); border: 1px solid rgba(255, 255, 255, 230); }
-            QPushButton#profileClose:pressed { background-color: rgba(255, 255, 255, 230); }
-        """)
- 
-        # ── Backdrop blur (fake "frosted glass") ─────────────────────────────
-        def blur(pixmap: QPixmap, factor: int = 24) -> QPixmap:
-            # Shrink to a few pixels, then stretch back with smoothing: fast and very soft.
-            # Bigger factor = blurrier.
-            pixmap.setDevicePixelRatio(1.0)
-            w, h = pixmap.width(), pixmap.height()
-            tiny = pixmap.scaled(max(1, w // factor), max(1, h // factor),
-                                 Qt.AspectRatioMode.IgnoreAspectRatio,
-                                 Qt.TransformationMode.SmoothTransformation)
-            return tiny.scaled(w, h,
-                               Qt.AspectRatioMode.IgnoreAspectRatio,
-                               Qt.TransformationMode.SmoothTransformation)
- 
-        def capture_backdrop():
-            # Photograph the container without the overlay/card, then blur it
-            glass["capturing"] = True
-            card.hide()
-            snapshot = self.container.grab()
-            card.show()
-            glass["capturing"] = False
-            glass["blurred"] = blur(snapshot)
- 
-        def on_show(event):
-            capture_backdrop()
- 
-        def paint_overlay(event):
-            # Light white veil over the whole window (skipped while photographing)
-            if glass["capturing"]:
-                return
-            painter = QPainter(ParentWidget)
-            painter.fillRect(ParentWidget.rect(), QColor(255, 255, 255, 90))
-            painter.end()
- 
-        def paint_card(event):
-            painter = QPainter(card)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
- 
-            shape = QPainterPath()
-            shape.addRoundedRect(QRectF(card.rect()).adjusted(1, 1, -1, -1), 24, 24)
- 
-            # a) blurred slice of the backdrop that sits exactly behind the card
-            blurred = glass["blurred"]
-            if blurred is not None:
-                origin = card.mapTo(self.container, QPoint(0, 0))
-                kx = blurred.width() / max(1, self.container.width())
-                ky = blurred.height() / max(1, self.container.height())
-                source = QRect(int(origin.x() * kx), int(origin.y() * ky),
-                               int(card.width() * kx), int(card.height() * ky))
-                painter.setClipPath(shape)
-                painter.drawPixmap(card.rect(), blurred, source)
-                painter.setClipping(False)
- 
-            # b) white frost tint
-            tint = QLinearGradient(0, 0, card.width(), card.height())
-            tint.setColorAt(0.0, QColor(255, 255, 255, 140))
-            tint.setColorAt(1.0, QColor(255, 255, 255, 70))
-            painter.fillPath(shape, QBrush(tint))
- 
-            # c) white glass edge
-            painter.setPen(QPen(QColor(255, 255, 255, 190), 1.5))
-            painter.drawPath(shape)
-            painter.end()
- 
-        ParentWidget.showEvent = on_show
-        ParentWidget.paintEvent = paint_overlay
-        card.paintEvent = paint_card
- 
-        return ParentWidget
 
     def unverifiedWidget(self):
         unverified = self.unverified

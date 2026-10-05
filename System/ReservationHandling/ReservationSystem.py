@@ -1,18 +1,53 @@
 import httpx
 import os
 from dotenv import load_dotenv
+import keyring
+from QtMain.Component.dependencies.DateSorter import sort_key
 load_dotenv()
 
 class ReservationSystem:
-    async def requestReservartion(data : dict):
+    async def requestReservartion(data : dict, error):
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.post(f"{os.getenv("REQUESTS")}/account/login",
+                print(data)
+                response = await client.post(f"{os.getenv("REQUESTS")}/reservation/save",
                     headers={
                         "Access": 
-                            f"{os.getenv("ACCESS")}"
-                })
+                            f"{os.getenv("ACCESS")}",
+                        "cookie":
+                            keyring.get_password("credentials", "value")
+                        },
+                    json=data
+                    )
+
+                response.raise_for_status()
+                if response.is_success:
+                    error.setText("")
+                    return
         except httpx.ConnectError as e:
             raise e
         except Exception:
+            raise e
+
+    async def getReservation(payload: dict):
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.post(f"{os.getenv("REQUESTS")}/reservation/fetchreserved",
+                    headers={
+                        "Access": 
+                            f"{os.getenv("ACCESS")}",
+                        "cookie":
+                            keyring.get_password("credentials", "value")
+                        },
+                    json=payload
+                )
+
+                response.raise_for_status()
+                if response.is_success:
+                    value = response.json()
+                    value.sort(key=sort_key)
+                    return [{"name": x[1], "time": f"{x[2]} {x[0]}"}for x in value]
+        except httpx.ConnectError as e:
+            raise e
+        except Exception as e:
             raise e
