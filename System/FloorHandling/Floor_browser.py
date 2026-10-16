@@ -6,7 +6,7 @@ in a QStackedWidget (the room grid), and one RoomCard per room. Add a room to
 rooms.json and it appears here automatically -- nothing in this file changes.
 
 Layout is two clearly separate zones, like a building directory in a lobby:
-a gray "directory board" on the left (floors) and the rooms on the right,
+a frosted-glass "directory board" on the left (floors) and the rooms on the right,
 with a thin divider between them so the split is obvious.
 
 Run directly (`python floor_browser.py`) for a standalone preview.
@@ -30,13 +30,27 @@ with open("System/FloorHandling/rooms.json", 'r') as e:
 # ---------------------------------------------------------------------------
 # Design tokens -- one place to tweak colours/fonts instead of hunting hex codes
 # ---------------------------------------------------------------------------
-GREEN_DARK = "#23411A"
-GREEN_ACCENT = "#5E9B2F"
-INK = "#1E2A3A"
-MUTED = "#6B6B6B"
-SIDEBAR_BG = "#EEF0F2"      # the light gray that marks the floor column
-LINE = "#C9CCD1"            # gray used for every separator/border
+BG_GRADIENT = ("qlineargradient(x1:0, y1:0, x2:1, y2:1, "
+               "stop:0 #04110c, stop:0.55 #08241a, stop:1 #0d3b2b)")
+GREEN_DARK = "#6EE7B7"      # mint: building headings and floor icons (name kept so nothing else breaks)
+GREEN_ACCENT = "rgba(110, 231, 183, 0.60)"   # hover border on room cards
+INK = "#E8F5EE"             # primary text
+MUTED = "#9FC4B2"           # secondary text
+SIDEBAR_BG = "rgba(255, 255, 255, 0.05)"     # the frosted glass that marks the floor column
+CARD_BG = "rgba(255, 255, 255, 0.06)"
+CARD_BG_HOVER = "rgba(255, 255, 255, 0.10)"
+SELECTED_BG = "rgba(52, 211, 153, 0.22)"     # emerald wash behind the chosen floor
+LINE = "rgba(110, 231, 183, 0.22)"           # mint hairline used for every separator/border
 FONT_STACK = "'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif"
+
+# Slim mint scrollbar: the default light one would glare against the dark green.
+SCROLLBAR_QSS = """
+    QScrollBar:vertical { background: transparent; width: 8px; margin: 8px 0 8px 0; }
+    QScrollBar::handle:vertical { background: rgba(110, 231, 183, 0.28); border-radius: 4px; min-height: 28px; }
+    QScrollBar::handle:vertical:hover { background: rgba(110, 231, 183, 0.50); }
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -70,7 +84,7 @@ def _render_svg(body: str, color: str, size: int = 36) -> QPixmap:
 
 def make_icon(body: str, normal: str, selected: str | None = None) -> QIcon:
     """Build a QIcon that swaps colour when its list row is selected
-    (dark green normally, white on the green highlight)."""
+    (mint normally, white on the emerald highlight)."""
     icon = QIcon()
     icon.addPixmap(_render_svg(body, normal), QIcon.Mode.Normal)
     if selected:
@@ -114,11 +128,11 @@ class RoomCard(QFrame):
 
         self.setStyleSheet(f"""
             QFrame#roomCard {{
-                background: white;
+                background: transparent;
                 border: 1px solid {LINE};
                 border-radius: 10px;
             }}
-            QFrame#roomCard:hover {{ border: 1px solid {GREEN_ACCENT}; }}
+            QFrame#roomCard:hover {{ background: {CARD_BG_HOVER}; border: 1px solid {GREEN_ACCENT}; }}
             QLabel#roomCardName {{
                 font-family: {FONT_STACK};
                 font-size: 14px; font-weight: 700; color: {INK};
@@ -146,10 +160,17 @@ class FloorPage(QScrollArea):
         super().__init__(parent)
         self.setWidgetResizable(True)
         self.setFrameShape(QFrame.Shape.NoFrame)
-        self.setStyleSheet("QScrollArea { background: white; border: none; }")
+        # Transparent on purpose: the gradient on FloorBrowser must show through the page.
+        self.setStyleSheet(
+            "QScrollArea { background: transparent; border: none; }"
+            "QScrollArea > QWidget > QWidget { background: transparent; }"
+            + SCROLLBAR_QSS
+        )
+        self.viewport().setAutoFillBackground(False)
 
         content = QWidget()
-        content.setStyleSheet("background: white;")
+        content.setObjectName("floorPageContent")
+        content.setStyleSheet("QWidget#floorPageContent { background: transparent; }")
         outer = QVBoxLayout(content)
         outer.setContentsMargins(20, 18, 20, 18)
         outer.setSpacing(20)
@@ -157,8 +178,9 @@ class FloorPage(QScrollArea):
         for building, rooms in buildings.items():
             # Section header: building icon + name, like a sign above a wing.
             header = QWidget()
+            header.setStyleSheet("background: transparent;")
             header_row = QHBoxLayout(header)
-            header_row.setContentsMargins(0, 0, 0, 0)
+            header_row.setContentsMargins(5, 5, 5, 5)
             header_row.setSpacing(8)
 
             section = QLabel(building)
@@ -172,6 +194,7 @@ class FloorPage(QScrollArea):
             outer.addWidget(header)
 
             grid_host = QWidget()
+            grid_host.setStyleSheet("background:transparent;")
             flow = FlowLayout(grid_host, margin=0, h_spacing=10, v_spacing=10)
             for room in rooms:
                 card = RoomCard(floor, building, room)
@@ -181,6 +204,7 @@ class FloorPage(QScrollArea):
 
         outer.addStretch(1)
         self.setWidget(content)
+        content.setAutoFillBackground(False)   # setWidget() turns it on; the gradient must show through
 
 
 class FloorBrowser(QWidget):
@@ -193,11 +217,17 @@ class FloorBrowser(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # The whole browser wears the dark-green gradient; everything inside is glass.
+        self.setObjectName("floorBrowser")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setStyleSheet(f"QWidget#floorBrowser {{ background: {BG_GRADIENT}; }}")
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # ---- Left: the floor column (its own gray panel) -------------------
+        # ---- Left: the floor column (its own glass panel) ------------------
         self.sidebar = QFrame()
         self.sidebar.setObjectName("floorSidebar")
         self.sidebar.setFixedWidth(170)
@@ -233,13 +263,13 @@ class FloorBrowser(QWidget):
                 padding: 12px 14px;
                 border-radius: 0px;                        /* flat edges */
                 border: none;
-                border-bottom: 1px solid {LINE};           /* gray line between floors */
+                border-bottom: 1px solid {LINE};           /* mint line between floors */
             }}
-            QListWidget::item:hover {{ background-color: #E2E5E8; }}
+            QListWidget::item:hover {{ background-color: rgba(255, 255, 255, 0.06); }}
             QListWidget::item:selected {{
-                background-color: {GREEN_DARK}; color: white;
+                background-color: {SELECTED_BG}; color: white;
             }}
-        """)
+        """ + SCROLLBAR_QSS)
 
         self.stack = QStackedWidget()
         floor_icon = make_icon(_ICON_LAYERS, GREEN_DARK, "#FFFFFF")

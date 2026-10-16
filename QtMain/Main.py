@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QStackedWidget, QFrame
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap, QPainter, QColor, QBrush, QPainterPath, QLinearGradient, QRadialGradient
+from PySide6.QtGui import QPixmap, QColor
 
 from QtMenu.Menu import Menu
 from System.AccountHandling.Account import AccountHandler
@@ -8,6 +8,13 @@ from System.FloorHandling.Floor_browser import FloorBrowser
 from QtMain.Component.Reservation import Reservation
 from QtMain.Component.home import Home
 from QtMain.Component.profile import Profile
+from QtMain.Component.facilities import Facilities
+from QtMain.Component.Feedback import Feedback
+
+
+gradient = """qlineargradient(x1:0, y1:0, x2:1, y2:1, 
+            stop:0 #04110c, stop:0.55 #08241a, stop:1 #0d3b2b)"""
+
 
 class CommonContainer(QWidget):
     NavigateToMenu = Signal(str)
@@ -16,7 +23,10 @@ class CommonContainer(QWidget):
         super().__init__()
         self.form = None
         self.container = QWidget()
-        self.container.setStyleSheet("background-color: rgba(200,200,200,1);")
+        self.container.setStyleSheet("""
+            background:qlineargradient(x1:0, y1:0, x2:1, y2:1,
+            stop:0 #04110c, stop:0.55 #08241a, stop:1 #0d3b2b);
+        """)
         self.Column1 = QWidget()
         self.Column2 = QWidget()
         self.Column3 = QWidget()
@@ -32,8 +42,9 @@ class CommonContainer(QWidget):
 
         self.reservation = Reservation(self.container)
 
-        # The profile is a stack page now (no parent here): secondColumn() adopts it
         self.profile = Profile()
+        self.facilities = Facilities()
+        self.feedback = Feedback()
 
         self._install_container_resize_handler()
 
@@ -52,8 +63,8 @@ class CommonContainer(QWidget):
         menu.button1.clicked.connect(lambda: self.NavigateToMenu.emit("Home"))
         menu.button2.clicked.connect(lambda: self.NavigateToMenu.emit("Reserve"))
         menu.button3.clicked.connect(lambda: self.NavigateToMenu.emit("Profile")) # connects button to navigation (note to self: Connect the other buttons through this way aswell)
-        menu.button4.clicked.connect(lambda: print("placeholder palang")) # facilities
-        menu.button5.clicked.connect(lambda: print("placeholder palang")) # suggestion / feedback - REMOVE self.Handler.handleLogout() ASAP
+        menu.button4.clicked.connect(lambda: self.NavigateToMenu.emit("Facilities")) # facilities
+        menu.button5.clicked.connect(lambda: self.NavigateToMenu.emit("Feedback")) # suggestion / feedback 
         menu.button6.clicked.connect(lambda: self.Handler.handleLogout()) # Settings
 
         containers = menu.containers()
@@ -64,10 +75,8 @@ class CommonContainer(QWidget):
         # The "#sideMenu" selector keeps this style on the column only,
         # so it no longer leaks into every child widget.
         Column1.setStyleSheet("""
-            #sideMenu {
-                background-color: #ffffff;
-                border-right: 1px solid #e5e7eb;
-            }
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+            stop:0 #04110c, stop:0.55 #08241a, stop:1 #0d3b2b);
         """)
         # child widget
         return Column1
@@ -75,15 +84,14 @@ class CommonContainer(QWidget):
     def secondColumn(self):
         Column2 = self.Column2
         Column2.setStyleSheet("""
-            background-color: white;
-            color:black;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+            stop:0 #04110c, stop:0.55 #08241a, stop:1 #0d3b2b);
         """)
         ColumnLayout = QVBoxLayout(Column2)
         ColumnLayout.setContentsMargins(0,0,0,0)
         ColumnLayout.setSpacing(0)
 
         self.floor_browser = FloorBrowser()
-        self.floor_browser.setFixedSize(Column2.width(), Column2.height())
         self.floor_browser.room_selected.connect(self.reservation.open_reservation_form)
 
         self.main_stack = QStackedWidget()
@@ -91,30 +99,26 @@ class CommonContainer(QWidget):
 
         self.main_stack.addWidget(self.home)
         self.main_stack.addWidget(self.floor_browser)
-        self.main_stack.addWidget(self.profile)   # index 2: fills Column2 like any other page
+        self.main_stack.addWidget(self.profile) 
+        self.main_stack.addWidget(self.facilities)
+        self.main_stack.addWidget(self.feedback)
 
         ColumnLayout.addWidget(self.main_stack)
-
-        def resize(event):
-            self.floor_browser.setFixedSize(Column2.width(), Column2.height())
-
-        Column2.resizeEvent = resize
 
         return Column2
     
     def thirdColumn(self):
         Column3 = self.Column3
-        Column3.setStyleSheet("""
-            background-color: white;
-            color:black;
-        """)
+        Column3.setObjectName("reservationColumn")
+        Column3.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        # Scoped by id. The old unscoped "background-color: white; color: black" cascaded into
+        # every child, and a white backdrop under the glass cards made their light text unreadable.
+        Column3.setStyleSheet(f"QWidget#reservationColumn {{ background: {gradient}; }}")
+
         ColumnLayout = QVBoxLayout(Column3)
+        ColumnLayout.setContentsMargins(0, 16, 0, 16)
+        ColumnLayout.setSpacing(0)
         ColumnLayout.addWidget(self.reservation)
-
-        def resize(event):
-            self.reservation.reservation_child.setFixedSize(Column3.width(), Column3.height())
-
-        Column3.resizeEvent = resize
         return Column3
 
     def menunavigation(self, target):
@@ -125,13 +129,20 @@ class CommonContainer(QWidget):
         if target == "Reserve":
             self.main_stack.setCurrentIndex(1)
             self.Column3.show()
-            self.Column3.resize(self.Column3.width() * 1.5, self.Column3.height() * 1.5)
+            self.Column3.raise_()   # always paint above Column2 if the two ever touch
+            self.Column3.resize(int(self.Column3.width()), int(self.Column3.height()))
             return
         if target == "Profile":
             self.Handler.handleFetchData()
             self.main_stack.setCurrentIndex(2)
             self.Column3.hide()
             return
+        if target == "Facilities":
+            self.main_stack.setCurrentIndex(3)
+            self.Column3.hide()
+        if target == "Feedback":
+            self.main_stack.setCurrentIndex(4)
+            self.Column3.hide()
 
     def updateVerificationOverlay(self, verified: bool):
         self.unverified.setHidden(verified)
@@ -184,9 +195,6 @@ class CommonContainer(QWidget):
         # a blur on a parent blurs its children too, so the card text was blurred.
         unverified.setObjectName("unverifiedOverlay")
         unverified.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        unverified.setStyleSheet(
-            "QWidget#unverifiedOverlay { background-color: rgba(255, 255, 255, 0.5); }"
-        )
  
         child = QWidget(unverified)
         child.setObjectName("unverifiedCard")
@@ -331,11 +339,11 @@ class CommonContainer(QWidget):
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
             QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
  
-            QLabel { background: transparent; border: none; color: #1F2A14; }
-            QLabel#unverifiedHeading  { font-size: 26px; font-weight: 800; color: #14210C; }
-            QLabel#unverifiedSubtitle { font-size: 13px; font-weight: 600; color: #38482A; }
-            QLabel#fieldCaption       { font-size: 13px; font-weight: 700; color: #22321A; }
-            QLabel#unverifiedError    { font-size: 12px; font-weight: 700; color: #B00020; }
+            QLabel { background: transparent; border: none; color: white; }
+            QLabel#unverifiedHeading  { font-size: 26px; font-weight: 800; color: white; }
+            QLabel#unverifiedSubtitle { font-size: 13px; font-weight: 600; color: white; }
+            QLabel#fieldCaption       { font-size: 13px; font-weight: 700; color: white; }
+            QLabel#unverifiedError    { font-size: 12px; font-weight: 700; color: white; }
  
             QLineEdit#fieldInput {
                 background-color: rgba(255, 255, 255, 245);

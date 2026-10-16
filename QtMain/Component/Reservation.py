@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, Signal, QRect, QRectF, QPoint, QDate
 from PySide6.QtGui import QPixmap, QPainter, QColor,  QPen, QBrush, QPainterPath, QLinearGradient
 from System.ReservationHandling.ReservationHandler import ReservationHandler
 from QtMain.Component.dependencies.Calendar import CustomCalendar
+from QtMain.Component.dependencies.Clock import CustomClock
 from ErrorTypes.DetailErrors import WrongData
 
 
@@ -14,18 +15,24 @@ class Reservation(QWidget):
         self.reservation_child = None
         self.reservation_info = {}
         self.ReservationWidget()
+        self.info = {}
         
     def open_reservation_form(self, info: dict):
         self._reservation_info = info or {}
         self._reservation_building.setText(str(self._reservation_info.get("building", "—")))
         self._reservation_floor.setText(str(self._reservation_info.get("floor", "—")))
         self._reservation_room.setText(str(self._reservation_info.get("room", "—")))
-        ReservationHandler.GetReservation(info, self)
-        self.setHidden(False)
+        self.info = info
+        self.handleReservation(info)
 
+    def handleReservation(self, info):
+        try: 
+            ReservationHandler.GetReservation(info, self)
+        except Exception as e:
+            self._reservation_error.setText(e.detail)
     def _cancel_reservation(self):
         self._reservation_calendar.hide()
-        self.setHidden(True)
+        self._reservation_clock.hide()
 
     def _confirm_reservation(self):
         if not self._reservation_info.get("room"):
@@ -42,7 +49,7 @@ class Reservation(QWidget):
             return self._reservation_error.setText(e.detail)
         
         self.ReservationConfirmed.emit(payload)
-        self.setHidden(True)
+        self.handleReservation(self.info)
 
     def ReservationWidget(self):
         """Builds the reservation overlay like a two-storey booking counter: the upper floor
@@ -51,7 +58,6 @@ class Reservation(QWidget):
         clashes before pressing Confirm."""
 
         ParentWidget = self
-        ParentWidget.setHidden(True)
         ParentWidget.setObjectName("reservationOverlay")
         ParentWidget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         ParentWidget.setStyleSheet("QWidget#reservationOverlay { background: transparent; }")
@@ -91,7 +97,7 @@ class Reservation(QWidget):
             shadow = QGraphicsDropShadowEffect(card)
             shadow.setBlurRadius(40)
             shadow.setOffset(0, 8)
-            shadow.setColor(QColor(0, 0, 0, 45))
+            shadow.setColor(QColor(0, 0, 0, 90))
             card.setGraphicsEffect(shadow)
             return card
 
@@ -132,7 +138,7 @@ class Reservation(QWidget):
         info_panel.setObjectName("reservationInfoPanel")
         info_panel.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         info_layout = QVBoxLayout(info_panel)
-        info_layout.setContentsMargins(0, 0, 0, 0)
+        info_layout.setContentsMargins(5, 5, 5, 5)
         info_layout.setSpacing(0)
 
         def make_info_row(caption: str) -> QLabel:
@@ -163,11 +169,53 @@ class Reservation(QWidget):
         time_caption = QLabel("Preferred time")
         time_caption.setObjectName("reservationCaption")
 
+        # The clock button sits on the caption row, exactly like the calendar button does
+        # for the date. It reuses the calendar button's style name, so both buttons look
+        # like twins without touching the stylesheet. Why: one look, zero extra CSS.
+        clock_btn = QPushButton("🕒")
+        clock_btn.setObjectName("reservationCalendarButton")
+        clock_btn.setFixedSize(32, 26)
+        clock_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        clock_btn.setToolTip("Pick a time")
+
+        time_header = QHBoxLayout()
+        time_header.setContentsMargins(0, 0, 0, 0)
+        time_header.setSpacing(8)
+        time_header.addWidget(time_caption)
+        time_header.addStretch(1)
+        time_header.addWidget(clock_btn)
+
         self._reservation_time = QLineEdit()
         self._reservation_time.setObjectName("reservationTimeInput")
         self._reservation_time.setMinimumHeight(42)
+        self._reservation_time.setPlaceholderText("12:00AM-01:00AM")
 
-        time_layout.addWidget(time_caption)
+        # Our own clock popup (see CustomClock). Like the calendar, it floats under its
+        # button and closes when you click outside it or press OK. It asks twice (start,
+        # then end) and returns one range like "12:00AM-01:00AM". The typed range is read
+        # back on open, so the hands start where the text already says.
+        self._reservation_clock = CustomClock(self)
+
+        def toggle_clock():
+            clk = self._reservation_clock
+            if clk.isVisible():
+                clk.hide()
+                return
+            # Clicking the button while the popup is open already closed it (click outside),
+            # so skip reopening it, otherwise the button could never close the clock.
+            if clk.justClosed():
+                return
+            # Hand the clock whatever range is typed in; it checks it and starts there if valid
+            clk.openBelow(clock_btn, self._reservation_time.text())
+
+        def on_time_picked(time_range: str):
+            # The clock already builds the finished text, e.g. "12:00AM-01:00AM"
+            self._reservation_time.setText(time_range)
+
+        clock_btn.clicked.connect(toggle_clock)
+        self._reservation_clock.timeSelected.connect(on_time_picked)
+
+        time_layout.addLayout(time_header)
         time_layout.addWidget(self._reservation_time)
         time_layout.addStretch(1)
 
@@ -311,7 +359,7 @@ class Reservation(QWidget):
         row_layout.addWidget(scrollEffectReserve_card, stretch=6)
         row_layout.addWidget(reserved_card, stretch=4)
 
-        # ── Glassmorphism: white glaze, dark high-contrast text ──────────────
+        # ── Glassmorphism: dark-green glaze, light high-contrast text, mint borders ──
         # "DM Sans" leads the font stack — a clean, modern Google Font — and falls
         # back to the same chain the rest of the app already uses if it isn't
         # installed yet. Download it free at https://fonts.google.com/specimen/DM+Sans
@@ -324,121 +372,125 @@ class Reservation(QWidget):
             QWidget#reservedCard    { background: transparent; border: none; }
 
             QLabel#reservationTitle {
-                font-size: 20px; font-weight: 800; color: #16212C;
+                font-size: 20px; font-weight: 800; color: #E8F5EE;
                 background: transparent; border: none;
             }
 
             QWidget#reservationInfoPanel {
-                background-color: rgba(255, 255, 255, 120);
-                border: 1px solid rgba(255, 255, 255, 210);
-                border-radius: 16px;
+                background-color: rgba(255, 255, 255, 0.07);
+                border: 1px solid rgba(110, 231, 183, 0.22);
             }
             QWidget#reservationCaption{
-                font-size: 12px; font-weight: 700; color: #3A4756;
+                font-size: 12px; font-weight: 700; color: #9FC4B2;
                 background: transparent; border: none;
             }
             QLabel#reservationCaption {
-                font-size: 12px; font-weight: 700; color: #3A4756;
+                font-size: 12px; font-weight: 700; color: #9FC4B2;
                 background: transparent; border: none;
             }
 
             QWidget#ReservationPurposes{
-                font-size: 12px; font-weight: 700; color: #3A4756;
+                font-size: 12px; font-weight: 700; color: #9FC4B2;
                 background: transparent; border: none;
             }
             QLabel#ReservationPurposes {
-                font-size: 12px; font-weight: 700; color: #3A4756;
+                font-size: 12px; font-weight: 700; color: #9FC4B2;
                 background: transparent; border: none;
             }
             QLabel#reservationValue {
-                font-size: 13px; font-weight: 700; color: #16212C;
+                font-size: 13px; font-weight: 700; color: #E8F5EE;
                 background: transparent; border: none;
             }
 
             QLabel#reservationError {
-                font-size: 12px; font-weight: 700; color: black;
+                font-size: 12px; font-weight: 700; color: #FDE68A;
                 background: transparent; border: none;
             }
 
             QLineEdit#reservationTimeInput {
-                background-color: rgba(255, 255, 255, 235);
-                color: #16212C;
-                border: 1px solid #C9D6DE;
+                background-color: rgba(255, 255, 255, 0.07);
+                color: #E8F5EE;
+                border: 1px solid rgba(110, 231, 183, 0.25);
                 border-radius: 10px;
                 padding: 0px 12px;
                 font-size: 14px; font-weight: 600;
-                selection-background-color: #1B4E63;
+                selection-background-color: rgba(52, 211, 153, 0.45);
                 selection-color: #FFFFFF;
+                placeholder-text-color: rgba(159, 196, 178, 0.75);
             }
-            QLineEdit#reservationTimeInput:hover { border: 1px solid #9FB4C0; }
-            QLineEdit#reservationTimeInput:focus { border: 1px solid #1B4E63; background-color: #FFFFFF; }
+            QLineEdit#reservationTimeInput:hover { border: 1px solid rgba(110, 231, 183, 0.50); }
+            QLineEdit#reservationTimeInput:focus { border: 1px solid #6EE7B7; background-color: rgba(255, 255, 255, 0.11); }
 
             QPushButton#reservationCancelButton {
-                background-color: rgba(255, 255, 255, 200); color: #16212C;
-                border: 1px solid rgba(22, 33, 44, 140); border-radius: 10px;
+                background-color: rgba(255, 255, 255, 0.07); color: #E8F5EE;
+                border: 1px solid rgba(110, 231, 183, 0.40); border-radius: 10px;
                 font-size: 14px; font-weight: 700;
             }
-            QPushButton#reservationCancelButton:hover   { background-color: rgba(255, 255, 255, 240); }
-            QPushButton#reservationCancelButton:pressed { background-color: #FFFFFF; }
+            QPushButton#reservationCancelButton:hover   { background-color: rgba(255, 255, 255, 0.13); }
+            QPushButton#reservationCancelButton:pressed { background-color: rgba(255, 255, 255, 0.20); }
 
             QPushButton#reservationConfirmButton {
-                background-color: #1B4E63; color: #FFFFFF;
+                background-color: #34D399; color: #04110C;
                 border: none; border-radius: 10px;
                 font-size: 14px; font-weight: 700;
             }
-            QPushButton#reservationConfirmButton:hover    { background-color: #24647F; }
-            QPushButton#reservationConfirmButton:pressed  { background-color: #0F323F; }
-            QPushButton#reservationConfirmButton:disabled { background-color: #7FA3B0; color: #EAF2F5; }
+            QPushButton#reservationConfirmButton:hover    { background-color: #6EE7B7; }
+            QPushButton#reservationConfirmButton:pressed  { background-color: #10B981; }
+            QPushButton#reservationConfirmButton:disabled { background-color: rgba(110, 231, 183, 0.18); color: rgba(232, 245, 238, 0.50); }
 
             QPushButton#reservationCalendarButton {
-                background-color: rgba(255, 255, 255, 200); color: #16212C;
-                border: 1px solid rgba(22, 33, 44, 140); border-radius: 8px;
+                background-color: rgba(255, 255, 255, 0.08); color: #E8F5EE;
+                border: 1px solid rgba(110, 231, 183, 0.35); border-radius: 8px;
                 font-size: 13px;
             }
-            QPushButton#reservationCalendarButton:hover   { background-color: rgba(255, 255, 255, 240); }
-            QPushButton#reservationCalendarButton:pressed { background-color: #FFFFFF; }
+            QPushButton#reservationCalendarButton:hover   { background-color: rgba(255, 255, 255, 0.15); }
+            QPushButton#reservationCalendarButton:pressed { background-color: rgba(255, 255, 255, 0.22); }
 
             /* ── "Already reserved" board ── */
             QLabel#reservedTitle {
-                font-size: 18px; font-weight: 800; color: #16212C;
+                font-size: 18px; font-weight: 800; color: #E8F5EE;
                 background: transparent; border: none;
             }
             QLabel#reservedCount {
-                background-color: rgba(255, 255, 255, 170);
-                border: 1px solid rgba(255, 255, 255, 230);
+                background-color: rgba(110, 231, 183, 0.14);
+                border: 1px solid rgba(110, 231, 183, 0.40);
                 border-radius: 12px; padding: 0px 10px;
-                font-size: 12px; font-weight: 800; color: #16212C;
+                font-size: 12px; font-weight: 800; color: #B7F0D6;
             }
 
             QScrollArea#reservedScroll { background: transparent; border: none; }
             QWidget#reservedViewport {
-                background-color: rgba(255, 255, 255, 90);
-                border: 1px solid rgba(255, 255, 255, 210);
+                background-color: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(110, 231, 183, 0.18);
                 border-radius: 16px;
             }
             QWidget#reservedPlate { background: transparent; }
 
             QScrollBar:vertical { background: transparent; width: 8px; margin: 8px 0 8px 0; }
-            QScrollBar::handle:vertical { background: rgba(22, 33, 44, 110); border-radius: 4px; min-height: 28px; }
-            QScrollBar::handle:vertical:hover { background: rgba(22, 33, 44, 170); }
+            QScrollBar::handle:vertical { background: rgba(110, 231, 183, 0.28); border-radius: 4px; min-height: 28px; }
+            QScrollBar::handle:vertical:hover { background: rgba(110, 231, 183, 0.50); }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
             QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
 
             QWidget#reservedRow {
-                background-color: rgba(255, 255, 255, 170);
-                border: 1px solid rgba(255, 255, 255, 230);
+                background-color: rgba(255, 255, 255, 0.07);
+                border: 1px solid rgba(110, 231, 183, 0.20);
                 border-radius: 12px;
             }
+            QLabel#unreservedName {
+                font-size: 13px; font-weight: 700; color: #E8F5EE;
+                background: transparent; border: none;
+            }
             QLabel#reservedName {
-                font-size: 13px; font-weight: 700; color: #16212C;
+                font-size: 13px; font-weight: 700; color: red;
                 background: transparent; border: none;
             }
             QLabel#reservedTime {
-                font-size: 12px; font-weight: 700; color: #3A4756;
+                font-size: 12px; font-weight: 700; color: #9FC4B2;
                 background: transparent; border: none;
             }
             QLabel#reservedEmpty {
-                font-size: 13px; font-weight: 600; color: #3A4756;
+                font-size: 13px; font-weight: 600; color: #9FC4B2;
                 background: transparent; border: none;
             }
         """)
@@ -469,8 +521,14 @@ class Reservation(QWidget):
         def paint_overlay(event):
             if glass["capturing"]:
                 return
+            # A see-through sheet of the dark-green gradient laid over the page behind,
+            # so the booking cards sit on the same colours as the rest of the app.
             painter = QPainter(ParentWidget)
-            painter.fillRect(ParentWidget.rect(), QColor(255, 255, 255, 90))
+            veil = QLinearGradient(0, 0, ParentWidget.width(), ParentWidget.height())
+            veil.setColorAt(0.0, QColor(4, 17, 12, 205))      # #04110c
+            veil.setColorAt(0.55, QColor(8, 36, 26, 205))     # #08241a
+            veil.setColorAt(1.0, QColor(13, 59, 43, 205))     # #0d3b2b
+            painter.fillRect(ParentWidget.rect(), QBrush(veil))
             painter.end()
 
         # One painter recipe, used by both cards, like two windows cut from the same
@@ -495,12 +553,16 @@ class Reservation(QWidget):
                     painter.drawPixmap(card.rect(), blurred, source)
                     painter.setClipping(False)
 
-                tint = QLinearGradient(0, 0, card.width(), card.height())
-                tint.setColorAt(0.0, QColor(255, 255, 255, 150))
-                tint.setColorAt(1.0, QColor(255, 255, 255, 80))
-                painter.fillPath(shape, QBrush(tint))
+                # Dark-green glaze first, so the light text stays readable whatever
+                # colours the blurred backdrop happens to hold; then a faint white
+                # sheen from the top-left corner for the "glass" look.
+                painter.fillPath(shape, QColor(4, 17, 12, 150))
+                sheen = QLinearGradient(0, 0, card.width(), card.height())
+                sheen.setColorAt(0.0, QColor(255, 255, 255, 34))
+                sheen.setColorAt(1.0, QColor(255, 255, 255, 12))
+                painter.fillPath(shape, QBrush(sheen))
 
-                painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5))
+                painter.setPen(QPen(QColor(110, 231, 183, 90), 1.5))
                 painter.drawPath(shape)
                 painter.end()
             return paint_card
@@ -516,10 +578,6 @@ class Reservation(QWidget):
         return ParentWidget
 
     def updateReservedList(self, entries: list):
-        """Refreshes the queue board like a receptionist wiping a whiteboard and rewriting
-        the names: clear old rows, add one per booking, or a friendly "nobody yet" note.
-        Why: rebuilding is simpler than tracking edits, and the list is short. Each entry
-        is a dict like {"name": "Dela Cruz, Juan", "time": "10:00 AM"}."""
         entries = entries or []
         layout = self._reserved_list_layout
 
@@ -554,8 +612,12 @@ class Reservation(QWidget):
             row_layout.setContentsMargins(12, 10, 12, 10)
             row_layout.setSpacing(10)
 
-            name_label = QLabel("—" if not name else str(name))
-            name_label.setObjectName("reservedName")
+            if entry["verified"] == 1:
+                name_label = QLabel(str(name))
+                name_label.setObjectName("unreservedName")
+            else:
+                name_label = QLabel("UNVERIFIED -" + str(name))
+                name_label.setObjectName("reservedName")
             name_label.setWordWrap(True)
 
             time_label = QLabel("—" if not time_text else str(time_text))

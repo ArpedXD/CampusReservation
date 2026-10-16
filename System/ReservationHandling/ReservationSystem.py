@@ -26,7 +26,7 @@ class ReservationSystem:
                     return
         except httpx.ConnectError as e:
             raise e
-        except Exception:
+        except Exception as e:
             raise e
 
     async def getReservation(payload: dict):
@@ -43,10 +43,10 @@ class ReservationSystem:
                 )
 
                 response.raise_for_status()
+
                 if response.is_success:
                     value = response.json()
-                    value.sort(key=sort_key)
-                    return [{"name": x[1], "time": f"{x[2]} {x[0]}"}for x in value]
+                    return [{"name": x[2], "time": f"{x[3]}————{x[0]}{x[1]}", "verified": x[4]}for x in value]
         except httpx.ConnectError as e:
             raise e
         except Exception as e:

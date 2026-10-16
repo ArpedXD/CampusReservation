@@ -1,0 +1,386 @@
+{
+  "2nd Floor": {
+    "Dimasalang Hall": {
+      "Classroom DH 200": {
+        "image": "images/2nd-floor-dimasalang-hall-classroom-dh-200.jpg",
+        "description": "Lecture classroom on the 2nd floor of Dimasalang Hall."
+      },
+      "Classroom DH 201": {
+        "image": "images/2nd-floor-dimasalang-hall-classroom-dh-201.jpg",
+        "description": "Lecture classroom on the 2nd floor of Dimasalang Hall."
+      },
+      "Classroom DH 202": {
+        "image": "images/2nd-floor-dimasalang-hall-classroom-dh-202.jpg",
+        "description": "Lecture classroom on the 2nd floor of Dimasalang Hall."
+      },
+      "Classroom DH 203": {
+        "image": "images/2nd-floor-dimasalang-hall-classroom-dh-203.jpg",
+        "description": "Lecture classroom on the 2nd floor of Dimasalang Hall."
+      },
+      "Classroom DH 208": {
+        "image": "images/2nd-floor-dimasalang-hall-classroom-dh-208.jpg",
+        "description": "Lecture classroom on the 2nd floor of Dimasalang Hall."
+      },
+      "Com Lab 1": {
+        "image": "images/2nd-floor-dimasalang-hall-com-lab-1.jpg",
+        "description": "Computer laboratory with workstations for hands-on IT classes."
+      }
+    },
+    "Phinma Hall": {
+      "Cafeteria": {
+        "image": "images/2nd-floor-phinma-hall-cafeteria.jpg",
+        "description": "Meals, snacks and drinks for students and staff."
+      }
+    },
+    "Silang Hall": {
+      "Classroom SH 241": {
+        "image": "images/2nd-floor-silang-hall-classroom-sh-241.jpg",
+        "description": "Lecture classroom on the 2nd floor of Silang Hall."
+      },
+      "Classroom SH 242": {
+        "image": "images/2nd-floor-silang-hall-classroom-sh-242.jpg",
+        "description": "Lecture classroom on the 2nd floor of Silang Hall."
+      },
+      "Classroom SH 246": {
+        "image": "images/2nd-floor-silang-hall-classroom-sh-246.jpg",
+        "description": "Lecture classroom on the 2nd floor of Silang Hall."
+      }
+    }
+  },
+  "3rd Floor": {
+    "Dimasalang Hall": {
+      "Classroom DH 300": {
+        "image": "images/3rd-floor-dimasalang-hall-classroom-dh-300.jpg",
+        "description": "Lecture classroom on the 3rd floor of Dimasalang Hall."
+      },
+      "Classroom DH 301": {
+        "image": "images/3rd-floor-dimasalang-hall-classroom-dh-301.jpg",
+        "description": "Lecture classroom on the 3rd floor of Dimasalang Hall."
+      },
+      "Classroom DH 302": {
+        "image": "images/3rd-floor-dimasalang-hall-classroom-dh-302.jpg",
+        "description": "Lecture classroom on the 3rd floor of Dimasalang Hall."
+      },
+      "Classroom DH 303": {
+        "image": "images/3rd-floor-dimasalang-hall-classroom-dh-303.jpg",
+        "description": "Lecture classroom on the 3rd floor of Dimasalang Hall."
+      },
+      "Classroom DH 308": {
+        "image": "images/3rd-floor-dimasalang-hall-classroom-dh-308.jpg",
+        "description": "Lecture classroom on the 3rd floor of Dimasalang Hall."
+      },
+      "IT Service Department": {
+        "image": "images/3rd-floor-dimasalang-hall-it-service-department.jpg",
+        "description": "Technical support, accounts and network concerns."
+      },
+      "Com Lab 2": {
+        "image": "images/3rd-floor-dimasalang-hall-com-lab-2.jpg",
+        "description": "Computer laboratory with workstations for hands-on IT classes."
+      }
+    },
+    "Phinma Hall": {
+      "Classroom PH 321": {
+        "image": "images/3rd-floor-phinma-hall-classroom-ph-321.jpg",
+        "description": "Lecture classroom on the 3rd floor of Phinma Hall."
+      },
+      "Classroom PH 322": {
+        "image": "images/3rd-floor-phinma-hall-classroom-ph-322.jpg",
+        "description": "Lecture classroom on the 3rd floor of Phinma Hall."
+      },
+      "Classroom PH 333": {
+        "image": "images/3rd-floor-phinma-hall-classroom-ph-333.jpg",
+        "description": "Lecture classroom on the 3rd floor of Phinma Hall."
+      },
+      "Classroom PH 335": {
+        "image": "images/3rd-floor-phinma-hall-classroom-ph-335.jpg",
+        "description": "Lecture classroom on the 3rd floor of Phinma Hall."
+      },
+      "Library": {
+        "image": "images/3rd-floor-phinma-hall-library.jpg",
+        "description": "Books, references and quiet study space."
+      }
+    },
+    "Silang Hall": {
+      "MPR": {
+        "image": "images/3rd-floor-silang-hall-mpr.jpg",
+        "description": "Multi-purpose room for meetings, seminars and events."
+      }
+    }
+  },
+  "4th Floor": {
+    "Dimasalang Hall": {
+      "Classroom DH 400": {
+        "image": "images/4th-floor-dimasalang-hall-classroom-dh-400.jpg",
+        "description": "Lecture classroom on the 4th floor of Dimasalang Hall."
+      },
+      "Classroom DH 401": {
+        "image": "images/4th-floor-dimasalang-hall-classroom-dh-401.jpg",
+        "description": "Lecture classroom on the 4th floor of Dimasalang Hall."
+      },
+      "Classroom DH 402": {
+        "image": "images/4th-floor-dimasalang-hall-classroom-dh-402.jpg",
+        "description": "Lecture classroom on the 4th floor of Dimasalang Hall."
+      },
+      "Classroom DH 403": {
+        "image": "images/4th-floor-dimasalang-hall-classroom-dh-403.jpg",
+        "description": "Lecture classroom on the 4th floor of Dimasalang Hall."
+      },
+      "Classroom DH 408": {
+        "image": "images/4th-floor-dimasalang-hall-classroom-dh-408.jpg",
+        "description": "Lecture classroom on the 4th floor of Dimasalang Hall."
+      },
+      "Com Lab 3": {
+        "image": "images/4th-floor-dimasalang-hall-com-lab-3.jpg",
+        "description": "Computer laboratory with workstations for hands-on IT classes."
+      }
+    },
+    "Phinma Hall": {
+      "Classroom PH 421": {
+        "image": "images/4th-floor-phinma-hall-classroom-ph-421.jpg",
+        "description": "Lecture classroom on the 4th floor of Phinma Hall."
+      },
+      "Classroom PH 424": {
+        "image": "images/4th-floor-phinma-hall-classroom-ph-424.jpg",
+        "description": "Lecture classroom on the 4th floor of Phinma Hall."
+      },
+      "Classroom PH 429": {
+        "image": "images/4th-floor-phinma-hall-classroom-ph-429.jpg",
+        "description": "Lecture classroom on the 4th floor of Phinma Hall."
+      },
+      "Classroom PH 430": {
+        "image": "images/4th-floor-phinma-hall-classroom-ph-430.jpg",
+        "description": "Lecture classroom on the 4th floor of Phinma Hall."
+      }
+    },
+    "Silang Hall": {
+      "Classroom SH 441": {
+        "image": "images/4th-floor-silang-hall-classroom-sh-441.jpg",
+        "description": "Lecture classroom on the 4th floor of Silang Hall."
+      },
+      "Classroom SH 442": {
+        "image": "images/4th-floor-silang-hall-classroom-sh-442.jpg",
+        "description": "Lecture classroom on the 4th floor of Silang Hall."
+      },
+      "Classroom SH 443": {
+        "image": "images/4th-floor-silang-hall-classroom-sh-443.jpg",
+        "description": "Lecture classroom on the 4th floor of Silang Hall."
+      },
+      "Classroom SH 444": {
+        "image": "images/4th-floor-silang-hall-classroom-sh-444.jpg",
+        "description": "Lecture classroom on the 4th floor of Silang Hall."
+      },
+      "Classroom SH 445": {
+        "image": "images/4th-floor-silang-hall-classroom-sh-445.jpg",
+        "description": "Lecture classroom on the 4th floor of Silang Hall."
+      }
+    }
+  },
+  "5th Floor": {
+    "Dimasalang Hall": {
+      "Com Lab 4": {
+        "image": "images/5th-floor-dimasalang-hall-com-lab-4.jpg",
+        "description": "Computer laboratory with workstations for hands-on IT classes."
+      },
+      "Classroom DH 500": {
+        "image": "images/5th-floor-dimasalang-hall-classroom-dh-500.jpg",
+        "description": "Lecture classroom on the 5th floor of Dimasalang Hall."
+      },
+      "Classroom DH 501": {
+        "image": "images/5th-floor-dimasalang-hall-classroom-dh-501.jpg",
+        "description": "Lecture classroom on the 5th floor of Dimasalang Hall."
+      },
+      "Classroom DH 502": {
+        "image": "images/5th-floor-dimasalang-hall-classroom-dh-502.jpg",
+        "description": "Lecture classroom on the 5th floor of Dimasalang Hall."
+      },
+      "Classroom DH 503": {
+        "image": "images/5th-floor-dimasalang-hall-classroom-dh-503.jpg",
+        "description": "Lecture classroom on the 5th floor of Dimasalang Hall."
+      },
+      "Classroom DH 508": {
+        "image": "images/5th-floor-dimasalang-hall-classroom-dh-508.jpg",
+        "description": "Lecture classroom on the 5th floor of Dimasalang Hall."
+      }
+    },
+    "Phinma Hall": {
+      "Classroom PH 521": {
+        "image": "images/5th-floor-phinma-hall-classroom-ph-521.jpg",
+        "description": "Lecture classroom on the 5th floor of Phinma Hall."
+      },
+      "Classroom PH 532": {
+        "image": "images/5th-floor-phinma-hall-classroom-ph-532.jpg",
+        "description": "Lecture classroom on the 5th floor of Phinma Hall."
+      },
+      "Nursing Lab": {
+        "image": "images/5th-floor-phinma-hall-nursing-lab.jpg",
+        "description": "Skills laboratory for nursing practice and simulation."
+      }
+    },
+    "Silang Hall": {
+      "Classroom SH 541": {
+        "image": "images/5th-floor-silang-hall-classroom-sh-541.jpg",
+        "description": "Lecture classroom on the 5th floor of Silang Hall."
+      },
+      "Classroom SH 542": {
+        "image": "images/5th-floor-silang-hall-classroom-sh-542.jpg",
+        "description": "Lecture classroom on the 5th floor of Silang Hall."
+      },
+      "Classroom SH 543": {
+        "image": "images/5th-floor-silang-hall-classroom-sh-543.jpg",
+        "description": "Lecture classroom on the 5th floor of Silang Hall."
+      },
+      "Classroom SH 544": {
+        "image": "images/5th-floor-silang-hall-classroom-sh-544.jpg",
+        "description": "Lecture classroom on the 5th floor of Silang Hall."
+      },
+      "Classroom SH 545": {
+        "image": "images/5th-floor-silang-hall-classroom-sh-545.jpg",
+        "description": "Lecture classroom on the 5th floor of Silang Hall."
+      }
+    }
+  },
+  "6th Floor": {
+    "Dimasalang Hall": {
+      "Classroom DH 600": {
+        "image": "images/6th-floor-dimasalang-hall-classroom-dh-600.jpg",
+        "description": "Lecture classroom on the 6th floor of Dimasalang Hall."
+      },
+      "Classroom DH 601": {
+        "image": "images/6th-floor-dimasalang-hall-classroom-dh-601.jpg",
+        "description": "Lecture classroom on the 6th floor of Dimasalang Hall."
+      },
+      "Classroom DH 602": {
+        "image": "images/6th-floor-dimasalang-hall-classroom-dh-602.jpg",
+        "description": "Lecture classroom on the 6th floor of Dimasalang Hall."
+      },
+      "Classroom DH 603": {
+        "image": "images/6th-floor-dimasalang-hall-classroom-dh-603.jpg",
+        "description": "Lecture classroom on the 6th floor of Dimasalang Hall."
+      },
+      "Classroom DH 604": {
+        "image": "images/6th-floor-dimasalang-hall-classroom-dh-604.jpg",
+        "description": "Lecture classroom on the 6th floor of Dimasalang Hall."
+      },
+      "Classroom DH 605": {
+        "image": "images/6th-floor-dimasalang-hall-classroom-dh-605.jpg",
+        "description": "Lecture classroom on the 6th floor of Dimasalang Hall."
+      }
+    },
+    "Phinma Hall": {
+      "AVR": {
+        "image": "images/6th-floor-phinma-hall-avr.jpg",
+        "description": "Audio-visual room for presentations, screenings and talks."
+      },
+      "Microtel Lab": {
+        "image": "images/6th-floor-phinma-hall-microtel-lab.jpg",
+        "description": "Hands-on hospitality training lab."
+      },
+      "Banquet Hall": {
+        "image": "images/6th-floor-phinma-hall-banquet-hall.jpg",
+        "description": "Function hall for hospitality events and training."
+      },
+      "Mock Hotel": {
+        "image": "images/6th-floor-phinma-hall-mock-hotel.jpg",
+        "description": "Simulated hotel where hospitality students practice."
+      },
+      "Classrooms": {
+        "image": "images/6th-floor-phinma-hall-classrooms.jpg",
+        "description": "General-purpose classrooms in this wing."
+      }
+    },
+    "Silang Hall": {
+      "Classroom SH 641": {
+        "image": "images/6th-floor-silang-hall-classroom-sh-641.jpg",
+        "description": "Lecture classroom on the 6th floor of Silang Hall."
+      },
+      "Classroom SH 642": {
+        "image": "images/6th-floor-silang-hall-classroom-sh-642.jpg",
+        "description": "Lecture classroom on the 6th floor of Silang Hall."
+      },
+      "Classroom SH 643": {
+        "image": "images/6th-floor-silang-hall-classroom-sh-643.jpg",
+        "description": "Lecture classroom on the 6th floor of Silang Hall."
+      },
+      "Classroom SH 644": {
+        "image": "images/6th-floor-silang-hall-classroom-sh-644.jpg",
+        "description": "Lecture classroom on the 6th floor of Silang Hall."
+      },
+      "Classroom SH 645": {
+        "image": "images/6th-floor-silang-hall-classroom-sh-645.jpg",
+        "description": "Lecture classroom on the 6th floor of Silang Hall."
+      }
+    }
+  },
+  "7th Floor": {
+    "Dimasalang Hall": {
+      "Classroom DH 704": {
+        "image": "images/7th-floor-dimasalang-hall-classroom-dh-704.jpg",
+        "description": "Lecture classroom on the 7th floor of Dimasalang Hall."
+      }
+    },
+    "Phinma Hall": {
+      "Gymnasium": {
+        "image": "images/7th-floor-phinma-hall-gymnasium.jpg",
+        "description": "Covered court for PE classes, sports and school events."
+      },
+      "Classroom PH 721": {
+        "image": "images/7th-floor-phinma-hall-classroom-ph-721.jpg",
+        "description": "Lecture classroom on the 7th floor of Phinma Hall."
+      },
+      "Classroom PH 722": {
+        "image": "images/7th-floor-phinma-hall-classroom-ph-722.jpg",
+        "description": "Lecture classroom on the 7th floor of Phinma Hall."
+      },
+      "Classroom PH 723": {
+        "image": "images/7th-floor-phinma-hall-classroom-ph-723.jpg",
+        "description": "Lecture classroom on the 7th floor of Phinma Hall."
+      }
+    },
+    "Silang Hall": {
+      "Classroom SH 741": {
+        "image": "images/7th-floor-silang-hall-classroom-sh-741.jpg",
+        "description": "Lecture classroom on the 7th floor of Silang Hall."
+      },
+      "Classroom SH 742": {
+        "image": "images/7th-floor-silang-hall-classroom-sh-742.jpg",
+        "description": "Lecture classroom on the 7th floor of Silang Hall."
+      },
+      "Classroom SH 743": {
+        "image": "images/7th-floor-silang-hall-classroom-sh-743.jpg",
+        "description": "Lecture classroom on the 7th floor of Silang Hall."
+      },
+      "Classroom SH 744": {
+        "image": "images/7th-floor-silang-hall-classroom-sh-744.jpg",
+        "description": "Lecture classroom on the 7th floor of Silang Hall."
+      },
+      "Classroom SH 745": {
+        "image": "images/7th-floor-silang-hall-classroom-sh-745.jpg",
+        "description": "Lecture classroom on the 7th floor of Silang Hall."
+      }
+    }
+  },
+  "8th Floor": {
+    "Silang Hall": {
+      "Classroom SH 841": {
+        "image": "images/8th-floor-silang-hall-classroom-sh-841.jpg",
+        "description": "Lecture classroom on the 8th floor of Silang Hall."
+      },
+      "Classroom SH 842": {
+        "image": "images/8th-floor-silang-hall-classroom-sh-842.jpg",
+        "description": "Lecture classroom on the 8th floor of Silang Hall."
+      },
+      "Classroom SH 843": {
+        "image": "images/8th-floor-silang-hall-classroom-sh-843.jpg",
+        "description": "Lecture classroom on the 8th floor of Silang Hall."
+      },
+      "Classroom SH 844": {
+        "image": "images/8th-floor-silang-hall-classroom-sh-844.jpg",
+        "description": "Lecture classroom on the 8th floor of Silang Hall."
+      },
+      "Classroom SH 845": {
+        "image": "images/8th-floor-silang-hall-classroom-sh-845.jpg",
+        "description": "Lecture classroom on the 8th floor of Silang Hall."
+      }
+    }
+  }
+}

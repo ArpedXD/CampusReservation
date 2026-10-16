@@ -4,10 +4,9 @@ from PySide6.QtCore import Qt
 
 
 class Profile(QWidget):
-    """A wall painted with soft colour splashes, like a gallery wall behind a framed
-    picture. It paints a gentle gradient plus three blurry colour blobs. Why: the
-    frosted card needs something colourful behind it, otherwise 'glass' just looks
-    like a plain white box."""
+    """A night-time forest wall lit by three lamps: a deep green gradient with soft
+    emerald glows. Why: the frosted card needs something bright behind it; without
+    the glows, 'glass' reads as a flat dark box."""
     def __init__(self):
         super().__init__()
         self.ProfileWidget()
@@ -17,16 +16,18 @@ class Profile(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         w, h = self.width(), self.height()
 
+        # Same stops as: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #04110c, stop:0.55 #08241a, stop:1 #0d3b2b)
         base = QLinearGradient(0, 0, w, h)
-        base.setColorAt(0.0, QColor("#F6F9F2"))
-        base.setColorAt(1.0, QColor("#E9F0FA"))
+        base.setColorAt(0.0, QColor("#04110c"))
+        base.setColorAt(0.55, QColor("#08241a"))
+        base.setColorAt(1.0, QColor("#0d3b2b"))
         painter.fillRect(self.rect(), QBrush(base))
 
         # (x ratio, y ratio, radius ratio, colour): each blob fades to transparent
         blobs = (
-            (0.12, 0.18, 0.55, QColor(120, 180, 70, 90)),
-            (0.88, 0.85, 0.60, QColor(90, 130, 255, 75)),
-            (0.85, 0.10, 0.35, QColor(255, 196, 100, 65)),
+            (0.85, 0.05, 0.55, QColor(52, 211, 153, 70)),    # emerald, top-right
+            (0.05, 0.95, 0.50, QColor(16, 185, 129, 55)),    # deeper emerald, bottom-left
+            (0.12, 0.18, 0.35, QColor(110, 231, 183, 32)),   # faint mint, top-left
         )
         for rx, ry, rr, colour in blobs:
             glow = QRadialGradient(rx * w, ry * h, rr * max(w, h))
@@ -62,7 +63,7 @@ class Profile(QWidget):
         shadow = QGraphicsDropShadowEffect(card)
         shadow.setBlurRadius(48)
         shadow.setOffset(0, 10)
-        shadow.setColor(QColor(30, 50, 80, 55))
+        shadow.setColor(QColor(0, 0, 0, 90))
         card.setGraphicsEffect(shadow)
 
         # ── Header: avatar, name + email, info chips, role badge ─────────────
@@ -84,11 +85,11 @@ class Profile(QWidget):
         circle.addEllipse(0, 0, size, size)
         p.setClipPath(circle)
         plate = QLinearGradient(0, 0, size, size)
-        plate.setColorAt(0.0, QColor("#CFE6B0"))
-        plate.setColorAt(1.0, QColor("#BCD3F5"))
+        plate.setColorAt(0.0, QColor("#1F7A5A"))
+        plate.setColorAt(1.0, QColor("#0B3D2C"))
         p.fillRect(0, 0, size, size, QBrush(plate))
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(255, 255, 255, 230))
+        p.setBrush(QColor(232, 245, 238, 230))
         p.drawEllipse(55, 30, 50, 50)            # head
         p.drawEllipse(30, 95, 100, 100)          # shoulders (clipped by the circle)
         p.end()
@@ -174,61 +175,62 @@ class Profile(QWidget):
         card_layout.addWidget(scroll, stretch=1)
 
         # ── One stylesheet, object-name selectors only ───────────────────────
+        # Palette: white glass at 4-8% opacity, mint borders (110,231,183), light-green text.
         card.setStyleSheet("""
             * { font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif; }
 
             QWidget#profileCard {
-                background-color: rgba(255, 255, 255, 150);
-                border: 1px solid rgba(255, 255, 255, 230);
+                background-color: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(110, 231, 183, 0.22);
                 border-radius: 28px;
             }
 
             QWidget#profileHeader {
-                background-color: rgba(255, 255, 255, 190);
-                border: 1px solid rgba(255, 255, 255, 240);
+                background-color: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(110, 231, 183, 0.25);
                 border-radius: 20px;
             }
 
             QScrollArea#profileScroll { background: transparent; border: none; }
             QWidget#profileViewport {
-                background-color: rgba(255, 255, 255, 120);
-                border: 1px solid rgba(255, 255, 255, 220);
+                background-color: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(110, 231, 183, 0.18);
                 border-radius: 20px;
             }
             QWidget#profileBody { background: transparent; }
 
             QScrollBar:vertical { background: transparent; width: 8px; margin: 10px 0 10px 0; }
-            QScrollBar::handle:vertical { background: rgba(30, 42, 58, 70); border-radius: 4px; min-height: 28px; }
-            QScrollBar::handle:vertical:hover { background: rgba(30, 42, 58, 120); }
+            QScrollBar::handle:vertical { background: rgba(110, 231, 183, 0.28); border-radius: 4px; min-height: 28px; }
+            QScrollBar::handle:vertical:hover { background: rgba(110, 231, 183, 0.50); }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
             QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
 
-            QLabel { background: transparent; border: none; color: #1E2A3A; }
-            QLabel#profileAvatar   { border: 3px solid rgba(255, 255, 255, 255); border-radius: 38px; }
-            QLabel#profileUsername { font-size: 22px; font-weight: 800; color: #14210C; }
-            QLabel#profileEmail    { font-size: 13px; font-weight: 600; color: #4A5868; }
+            QLabel { background: transparent; border: none; color: #E8F5EE; }
+            QLabel#profileAvatar   { border: 3px solid rgba(110, 231, 183, 0.55); border-radius: 38px; }
+            QLabel#profileUsername { font-size: 22px; font-weight: 800; color: #E8F5EE; }
+            QLabel#profileEmail    { font-size: 13px; font-weight: 600; color: #9FC4B2; }
             QLabel#profileChip {
-                background-color: rgba(94, 155, 47, 30);
-                border: 1px solid rgba(94, 155, 47, 90);
-                border-radius: 12px;
+                background-color: rgba(110, 231, 183, 0.12);
+                border: 1px solid rgba(110, 231, 183, 0.40);
+                border-radius: 10px;
                 padding: 3px 12px;
-                font-size: 12px; font-weight: 700; color: #23411A;
+                font-size: 12px; font-weight: 700; color: #B7F0D6;
             }
             QLabel#profileRole {
-                background-color: #23411A;
-                border-radius: 12px;
+                background-color: #34D399;
+                border-radius: 10px;
                 padding: 4px 14px;
-                font-size: 12px; font-weight: 800; color: #FFFFFF;
+                font-size: 12px; font-weight: 800; color: #04110C;
             }
-            QLabel#profileEmpty { font-size: 13px; font-weight: 600; color: #6B7785; padding: 24px; }
+            QLabel#profileEmpty { font-size: 13px; font-weight: 600; color: #9FC4B2; padding: 24px; }
 
             QPushButton#profileClose {
-                background: transparent; color: #1E2A3A;
+                background: transparent; color: #E8F5EE;
                 border: 1px solid transparent; border-radius: 16px;
                 font-size: 20px; font-weight: 600;
             }
-            QPushButton#profileClose:hover   { background-color: rgba(30, 42, 58, 25); }
-            QPushButton#profileClose:pressed { background-color: rgba(30, 42, 58, 50); }
+            QPushButton#profileClose:hover   { background-color: rgba(110, 231, 183, 0.15); }
+            QPushButton#profileClose:pressed { background-color: rgba(110, 231, 183, 0.28); }
         """)
 
         return page

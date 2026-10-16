@@ -37,7 +37,7 @@ class AccountHandler:
             errorLabel.setVisible(False)
             try:
                 await self.reqClass.signupRequest(username.text(), password.text())
-                await self.handleInformations()
+                self.handleInformations()
             except httpx.ConnectError:
                 errorLabel.setText("Connection Error: Please check your internet connection or try again later.")
                 errorLabel.setVisible(True)
@@ -159,3 +159,17 @@ class AccountHandler:
             except Exception as e:
                 print(e.response.json().get("detail"))
         asyncio.create_task(getusername())
+
+    def sendFeedback(self, message, error):
+        async def _sendFeedback():
+            try:
+                data = await self.reqClass.SendFeedBack(message)
+                if data is None:
+                    return
+            except httpx.ConnectError:
+                error.setText("Please check your internet connection.")
+            except httpx.HTTPStatusError as e:
+                error.setText(e.response.json().get("detail"))
+            except Exception as e:
+                error.setText("Something went wrong!")
+        asyncio.create_task(_sendFeedback())

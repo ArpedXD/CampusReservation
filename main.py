@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Campus Reservation")
         self.setWindowIcon(QIcon("resources/SJC_LOGO.png"))
         self.setMinimumSize(1200,600)
+        self.showMaximized()
         self.stack = QStackedWidget()
         self.nav_name = QLabel("John")
         self.form = Form()
@@ -68,21 +69,22 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.main.firstColumn(), stretch=1)
         layout.addWidget(self.main.secondColumn(), stretch=3)
-        layout.addWidget(self.main.thirdColumn(), stretch=2)
+        layout.addWidget(self.main.thirdColumn(), stretch=3)
 
         # Raises UI to profile AFTER widget
         self.main.unverified.raise_()
+        self.main._install_container_resize_handler()
         return self.main.container
     
     def startcheck(self): # Handles function when the application starts
         self.VerifyLoginSync = AccountHandler().handleInformations()
-        AccountHandler().getusernames()
 
     def stackHandler(self, stacks):
         if stacks == "Form":
             self.stack.setCurrentWidget(self.FormUI)
         if stacks == "DoubleColumn":
             self.Dashboard = self.DoubleColumn()
+            AccountHandler().getusernames()
             self.stack.addWidget(self.Dashboard)
             self.stack.setCurrentWidget(self.Dashboard)
     

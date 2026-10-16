@@ -3,6 +3,7 @@ import asyncio
 from ErrorTypes.DetailErrors import WrongData
 from System.ReservationHandling.ReservationSystem import ReservationSystem
 import httpx
+from httpx import HTTPError
 class ReservationHandler:
     def ValidateReservation(payload):
         pattern = r"^(0[1-9]|1[0-2]):[0-5][0-9](AM|PM)-(0[1-9]|1[0-2]):[0-5][0-9](AM|PM)$"
@@ -19,9 +20,11 @@ class ReservationHandler:
             try:
                 await ReservationSystem.requestReservartion(payload, error)
             except httpx.ConnectError:
-                return error.setText("Internet Connection Error...")
+                return error.setText("Error: Please check your internet connection.")
+            except HTTPError as e:
+                return error.setText("Error : " + e.response.json().get("detail"))
             except Exception as e:
-                return error.setText("err")
+                raise error.setText("Error : An Unknown Error OCrrued")
         asyncio.create_task(_requestReservation())
 
     def GetReservation(payload : dict, reservation):
@@ -30,8 +33,10 @@ class ReservationHandler:
                 data = await ReservationSystem.getReservation(payload)
                 reservation.updateReservedList(data)
                 return data
-            except Exception as e:
+            except HTTPError as e:
                 raise e
-                return []
+            except Exception as e:
+                e.detail = "unknown error..."
+                raise e
 
         asyncio.create_task(_getReservation())

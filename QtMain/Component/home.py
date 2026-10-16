@@ -16,13 +16,14 @@ STYLE = """
     }
 
     #Card {
-        background: rgba(255,255,255,0.94);
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+        stop:0 #04110c, stop:0.55 #08241a, stop:1 #0d3b2b);
         border: 1px solid rgba(15,23,42,0.08);
         border-radius: 14px;
     }
-    #Eyebrow   { color: #23411A; font-size: 11px; font-weight: 700; background: transparent; }
-    #CardTitle { color: #23411A; font-size: 16px; font-weight: 700; background: transparent; }
-    #CardBody  { color: #23411A; font-size: 13px; background: transparent; }
+    #Eyebrow   { color: white; font-size: 11px; font-weight: 700; background: transparent; }
+    #CardTitle { color: white; font-size: 16px; font-weight: 700; background: transparent; }
+    #CardBody  { color: white; font-size: 13px; background: transparent; }
 
     #CardAccent {
         background: #23411A;
@@ -135,7 +136,7 @@ class AccentCard(QFrame):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(22, 20, 22, 20)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
         layout.addWidget(MakeLabel(eyebrow, "AccentEyebrow"))
         layout.addWidget(MakeLabel(title, "AccentTitle"))
@@ -188,9 +189,9 @@ class Home(QWidget):
             "A place to study and read quietly",
         )
 
-        BelowPart.addWidget(f1)
-        BelowPart.addWidget(f2)
-        BelowPart.addWidget(f3)
+        BelowPart.addWidget(f1, stretch=1)
+        BelowPart.addWidget(f2, stretch=1)
+        BelowPart.addWidget(f3, stretch=1)
 
         layout.addWidget(UpperPart, stretch=1)
         layout.addLayout(BelowPart, stretch=2)

@@ -100,7 +100,7 @@ class Menu:
 
         QPushButton {
             background-color: transparent;
-            color: #1f2937;
+            color: white;
             border: 2px solid transparent;
             border-radius: 10px;
             padding: 0px 14px;
@@ -144,7 +144,7 @@ class Menu:
         self.button3 = QPushButton("My Reservation")
         self.button4 = QPushButton("Facilities")
         self.button5 = QPushButton("Suggestion/Feedback")
-        self.button6 = QPushButton("Settings")
+        self.button6 = QPushButton("Logout")
 
         self.buttonList = [self.button1, self.button2, self.button3, self.button4, self.button5, self.button6]
         # Page-like buttons that hold the green highlight. Logout is an action,

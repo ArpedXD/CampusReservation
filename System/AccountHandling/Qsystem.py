@@ -45,7 +45,6 @@ class RequestingClasses:
                 if response.is_success:
                     value = response.json()
                     keyring.set_password("credentials", "value", value["cookie"])
-                    print(keyring.get_password("credentials", "value"))
         except httpx.HTTPStatusError as e:
             raise e
 
@@ -135,3 +134,20 @@ class RequestingClasses:
                         return response.json()
             except Exception as e:
                 raise
+
+    async def SendFeedBack(self, message):
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.post(f"{self.link}/account/sendMessage", headers={
+                    "Access":
+                        f"{self.ACCESS}",
+                    "cookie":
+                        self.cookie
+                }, json={"message": message})
+
+                response.raise_for_status()
+
+                if response.is_success:
+                    return response.json()
+        except Exception as e:
+            raise
