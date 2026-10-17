@@ -121,21 +121,38 @@ class RequestingClasses:
             raise
 
     async def GetInformations(self):
-            try:
-                async with httpx.AsyncClient(timeout=10) as client:
-                    response = await client.get(f"{self.link}/account/getinformations", headers={
-                        "Access":
-                            f"{self.ACCESS}",
-                        "cookie":
-                            self.cookie
-                    })
-    
-                    response.raise_for_status()
-    
-                    if response.is_success:
-                        return response.json()
-            except Exception as e:
-                raise
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(f"{self.link}/account/getinformations", headers={
+                    "Access":
+                        f"{self.ACCESS}",
+                    "cookie":
+                        self.cookie
+                })
+
+                response.raise_for_status()
+
+                if response.is_success:
+                    return response.json()
+        except Exception as e:
+            raise
+
+    async def GetProfileReservation(self):
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(f"{self.link}/account/getSelfReservation", headers={
+                    "Access":
+                        f"{self.ACCESS}",
+                    "cookie":
+                        self.cookie
+                })
+
+                response.raise_for_status()
+
+                if response.is_success:
+                    return response.json()
+        except Exception as e:
+            raise
 
     async def SendFeedBack(self, message):
         try:

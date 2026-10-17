@@ -134,6 +134,7 @@ class CommonContainer(QWidget):
             return
         if target == "Profile":
             self.Handler.handleFetchData()
+            self.Handler.handleProfileReservation()
             self.main_stack.setCurrentIndex(2)
             self.Column3.hide()
             return

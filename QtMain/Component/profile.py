@@ -1,3 +1,5 @@
+from datetime import date, datetime, time as dt_time, timedelta
+
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGraphicsDropShadowEffect, QScrollArea, QFrame
 from PySide6.QtGui import QPixmap, QPainter, QColor, QBrush, QPainterPath, QLinearGradient, QRadialGradient
 from PySide6.QtCore import Qt
@@ -139,12 +141,13 @@ class Profile(QWidget):
         header_row.addLayout(info, stretch=1)
         header_row.addWidget(role, alignment=Qt.AlignmentFlag.AlignTop)
 
-        # ── Body: blank scrollable plate for future content ──────────────────
+        # ── Body: scrollable plate that holds the reservation cards ──────────
         scroll = QScrollArea()
         scroll.setObjectName("profileScroll")
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._profile_scroll = scroll
 
         viewport = scroll.viewport()
         viewport.setObjectName("profileViewport")
@@ -157,6 +160,7 @@ class Profile(QWidget):
         body.setAutoFillBackground(False)   # setWidget() turns it on; the glass must show through
 
         # Add future content with self._profile_body_layout.addWidget(...)
+        # Layout order: [empty-state label, reservation cards..., trailing stretch]
         self._profile_body_layout = QVBoxLayout(body)
         self._profile_body_layout.setContentsMargins(20, 20, 20, 20)
         self._profile_body_layout.setSpacing(12)
@@ -164,6 +168,8 @@ class Profile(QWidget):
         empty = QLabel("Nothing here yet")
         empty.setObjectName("profileEmpty")
         empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._profile_empty = empty
+        self._reservation_cards = []
         self._profile_body_layout.addWidget(empty)
         self._profile_body_layout.addStretch(1)
 
@@ -231,6 +237,35 @@ class Profile(QWidget):
             }
             QPushButton#profileClose:hover   { background-color: rgba(110, 231, 183, 0.15); }
             QPushButton#profileClose:pressed { background-color: rgba(110, 231, 183, 0.28); }
+
+            /* ── Reservation cards ───────────────────────────────────────── */
+            QWidget#reservationCard {
+                background-color: rgba(255, 255, 255, 0.07);
+                border: 1px solid rgba(110, 231, 183, 0.22);
+                border-radius: 16px;
+            }
+            QWidget#reservationCard:hover {
+                background-color: rgba(255, 255, 255, 0.10);
+                border: 1px solid rgba(110, 231, 183, 0.45);
+            }
+            QLabel#reservationRoom    { font-size: 16px; font-weight: 800; color: #E8F5EE; }
+            QLabel#reservationMeta    { font-size: 13px; font-weight: 700; color: #B7F0D6; }
+            QLabel#reservationPurpose { font-size: 13px; font-weight: 500; color: #E8F5EE; }
+            QLabel#reservationFooter  { font-size: 12px; font-weight: 600; color: #9FC4B2; }
+            QLabel#reservationBadgeUnverified {
+                background-color: rgba(252, 211, 77, 0.12);
+                border: 1px solid rgba(252, 211, 77, 0.45);
+                border-radius: 10px;
+                padding: 3px 12px;
+                font-size: 12px; font-weight: 800; color: #FCD34D;
+            }
+            QLabel#reservationBadgeVerified {
+                background-color: rgba(52, 211, 153, 0.14);
+                border: 1px solid rgba(52, 211, 153, 0.50);
+                border-radius: 10px;
+                padding: 3px 12px;
+                font-size: 12px; font-weight: 800; color: #6EE7B7;
+            }
         """)
 
         return page
@@ -261,3 +296,149 @@ class Profile(QWidget):
         self._profile_year_level.setText(f"Year {year}" if year else "Year —")
         self._profile_course.setText(pick("College_course") or "—")
         self._profile_student_id.setText(pick("student_id") or "—")
+
+    # ══════════════════════════════════════════════════════════════════════
+    #  Reservation helpers: fetch rows from reservationTable, call these
+    # ══════════════════════════════════════════════════════════════════════
+
+    def AddReservation(self, reservation: dict):
+        """Pins one reservation slip onto a notice board: the dict from your database
+        becomes a card appended below the existing ones. Why: you call it once per
+        fetched row, and the empty-state message vanishes automatically, so no caller
+        has to manage it."""
+        card = self._build_reservation_card(reservation)
+        # Insert before the trailing stretch so cards stack from the top.
+        self._profile_body_layout.insertWidget(self._profile_body_layout.count() - 1, card)
+        self._reservation_cards.append(card)
+        self._profile_empty.setVisible(False)
+        return card
+
+    def SetReservations(self, reservations):
+        """Swaps the whole notice board in one go, like a janitor clearing old slips
+        before pinning a fresh batch from the server. Why: after every fetch the list
+        should match the database exactly, so duplicates never pile up when you
+        refresh."""
+        self.ClearReservations()
+        for reservation in reservations or []:
+            self.AddReservation(reservation)
+        self._profile_scroll.verticalScrollBar().setValue(0)
+
+    def ClearReservations(self):
+        """Wipes the notice board clean, then puts the 'Nothing here yet' sign back up.
+        Why: removed cards are deleted rather than merely hidden, so repeated
+        refreshes don't leak widgets and slowly eat memory."""
+        for card in self._reservation_cards:
+            self._profile_body_layout.removeWidget(card)
+            card.setParent(None)
+            card.deleteLater()
+        self._reservation_cards.clear()
+        self._profile_empty.setVisible(True)
+
+    def _build_reservation_card(self, data: dict) -> QWidget:
+        """Stamps out one booking slip from a template: blanks for room, time, purpose
+        and booker are filled from the row's values. Why: all formatting lives here, so
+        rows with missing keys render a dash instead of crashing the page."""
+        room_name = self._pick(data, "room_name", "Room_name", "room")
+        room_id = self._pick(data, "room_id")
+        if room_name is not None:
+            room_text = str(room_name)
+        elif room_id is not None:
+            room_text = f"Room {room_id}"
+        else:
+            room_text = "Room —"
+
+        day = self._format_day(self._pick(data, "reservationDay"))
+        start = self._format_time(self._pick(data, "start_time"))
+        end = self._format_time(self._pick(data, "end_time"))
+        purpose = self._pick(data, "reservation_purpose")
+        person = self._pick(data, "person_reserved")
+        code = self._pick(data, "reservation_code")
+
+        try:
+            verified = int(self._pick(data, "pending") or 0) != 0
+        except (TypeError, ValueError):
+            verified = False   # pending = 0 means unverified, so unknown values stay unverified
+
+        card = QWidget()
+        card.setObjectName("reservationCard")
+        card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(6)
+
+        def make_label(name: str, text: str, wrap: bool = False) -> QLabel:
+            label = QLabel(text)
+            label.setObjectName(name)
+            label.setWordWrap(wrap)
+            return label
+
+        badge = make_label(
+            "reservationBadgeVerified" if verified else "reservationBadgeUnverified",
+            "VERIFIED" if verified else "UNVERIFIED",
+        )
+        badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        top = QHBoxLayout()
+        top.setContentsMargins(0, 0, 0, 0)
+        top.setSpacing(12)
+        top.addWidget(make_label("reservationRoom", room_text), stretch=1)
+        top.addWidget(badge, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        footer_parts = [f"Reserved by {person}" if person else "Reserved by —"]
+        if code is not None:
+            footer_parts.append(f"#{code}")
+
+        layout.addLayout(top)
+        layout.addWidget(make_label("reservationMeta", f"{day}  •  {start} – {end}"))
+        layout.addWidget(make_label("reservationPurpose", str(purpose) if purpose else "No purpose given", wrap=True))
+        layout.addWidget(make_label("reservationFooter", "  ·  ".join(footer_parts)))
+        return card
+
+    @staticmethod
+    def _pick(data: dict, *keys):
+        """Checks several possible labels on a drawer until one holds something. Why:
+        it returns the raw value (0 stays 0), so a 'pending = 0' row is never mistaken
+        for a missing one."""
+        for key in keys:
+            value = data.get(key)
+            if value is not None and value != "":
+                return value
+        return None
+
+    @staticmethod
+    def _format_time(value) -> str:
+        """Reads a 24-hour clock and re-announces it the friendly way, like a station
+        board turning 14:30 into 2:30 PM. Why: MySQL TIME arrives as a timedelta, a
+        time object or a string depending on the driver, so all three are accepted."""
+        try:
+            if isinstance(value, timedelta):
+                total = int(value.total_seconds())
+                hours, minutes = (total // 3600) % 24, (total % 3600) // 60
+            elif isinstance(value, (dt_time, datetime)):
+                hours, minutes = value.hour, value.minute
+            elif isinstance(value, str):
+                parts = value.split(":")
+                hours, minutes = int(parts[0]), int(parts[1])
+            else:
+                return "—"
+        except (ValueError, IndexError):
+            return str(value)
+        suffix = "AM" if hours < 12 else "PM"
+        return f"{hours % 12 or 12}:{minutes:02d} {suffix}"
+
+    @staticmethod
+    def _format_day(value) -> str:
+        """Turns a bare calendar date into a wall-calendar line such as 'Sat, Oct 17,
+        2026'. Why: the day name makes bookings easier to recognise at a glance, and
+        both date objects and 'YYYY-MM-DD' strings from the server are accepted."""
+        if isinstance(value, datetime):
+            value = value.date()
+        if isinstance(value, str):
+            try:
+                value = date.fromisoformat(value[:10])
+            except ValueError:
+                return value
+        if isinstance(value, date):
+            return f"{value:%a, %b} {value.day}, {value.year}"
+        return "—"

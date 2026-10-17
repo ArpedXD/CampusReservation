@@ -131,6 +131,21 @@ class AccountHandler:
                 print(e.response.json().get("detail"))
         asyncio.create_task(_handleData())
 
+    def handleProfileReservation(self):
+            async def _handleReservationData():
+                try:
+                    data = await self.reqClass.GetProfileReservation()
+                    if data is None:
+                        return
+                    app_instance = QApplication.instance()
+                    
+                    app_instance.mainwindow.main.profile.SetReservations(data)
+                except httpx.ConnectError:
+                    pass
+                except Exception as e:
+                    print(e.response.json().get("detail"))
+            asyncio.create_task(_handleReservationData())
+
     def handleDelete(self, err):
         async def delete_data():
             try:
