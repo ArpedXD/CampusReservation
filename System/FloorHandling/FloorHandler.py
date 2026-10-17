@@ -1,2 +1,0 @@
-class Floorhandler:
-    """HANDLES LOGIC BEHGIND HANDLING THE FLOORS"""

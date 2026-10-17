@@ -47,6 +47,8 @@ class RequestingClasses:
                     keyring.set_password("credentials", "value", value["cookie"])
         except httpx.HTTPStatusError as e:
             raise e
+        except Exception as e:
+            raise e
 
     async def isLoggedIn(self):
         self.cookie = keyring.get_password("credentials", "value")

@@ -23,7 +23,7 @@ import ast
 from System.FloorHandling.flow_layout import FlowLayout
 
 SCHOOL_FLOORS = None
-with open("System/FloorHandling/rooms.json", 'r') as e:
+with open("+oSystem/FloorHandling/rooms.json", 'r') as e:
     SCHOOL_FLOORS = ast.literal_eval(e.read())
 
 

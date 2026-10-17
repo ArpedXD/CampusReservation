@@ -21,8 +21,7 @@ class AccountHandler:
                 errorLabel.setText("Connection Error: Please check your internet connection or try again later.")
                 errorLabel.setVisible(True)
             except Exception as e:
-                print(str(e))
-                errorLabel.setText(e.response.json().get("detail"))
+                errorLabel.setText(str(e))
                 errorLabel.setVisible(True)
             finally:
                 submit.setEnabled(True)
@@ -41,8 +40,14 @@ class AccountHandler:
             except httpx.ConnectError:
                 errorLabel.setText("Connection Error: Please check your internet connection or try again later.")
                 errorLabel.setVisible(True)
+            except httpx.HTTPStatusError as e:
+                    try:
+                        errorLabel.setText(e.response.json().get("detail"))
+                    except Exception as e:
+                        errorLabel.setText("Unknown Error has occured.")
+                    errorLabel.setVisible(True)
             except Exception as e:
-                errorLabel.setText(e.response.json().get("detail"))
+                errorLabel.setText(str(e))
                 errorLabel.setVisible(True)
             finally:
                 submit.setEnabled(True)
