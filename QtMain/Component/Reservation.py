@@ -1,10 +1,42 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QGraphicsDropShadowEffect, QScrollArea, QFrame, QSizePolicy, QGridLayout
-from PySide6.QtCore import Qt, Signal, QRect, QRectF, QPoint, QDate
+from PySide6.QtCore import Qt, Signal, QRect, QRectF, QPoint, QDate, QSize
 from PySide6.QtGui import QPixmap, QPainter, QColor,  QPen, QBrush, QPainterPath, QLinearGradient
 from System.ReservationHandling.ReservationHandler import ReservationHandler
 from QtMain.Component.dependencies.Calendar import CustomCalendar
 from QtMain.Component.dependencies.Clock import CustomClock
 from ErrorTypes.DetailErrors import WrongData
+
+
+class ElidedLabel(QLabel):
+    """A label that trims itself with "…" like a name tag that is too small for a long
+    name: it prints what fits and shortens the rest. Why: a wrapping label inside a
+    scrolling list can't grow its row, so long usernames got cut mid-letter. The full
+    name stays available as a tooltip."""
+
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(parent)
+        self._full_text = text
+        # Ignored width = "don't demand room for the whole text", so the label can shrink
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.setToolTip(text)
+        super().setText(text)
+
+    def setText(self, text: str):
+        self._full_text = text
+        self.setToolTip(text)
+        self._refresh()
+
+    def minimumSizeHint(self):
+        return QSize(0, super().minimumSizeHint().height())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._refresh()
+
+    def _refresh(self):
+        shown = self.fontMetrics().elidedText(
+            self._full_text, Qt.TextElideMode.ElideRight, max(0, self.width()))
+        super().setText(shown)
 
 
 class Reservation(QWidget):
@@ -477,13 +509,30 @@ class Reservation(QWidget):
                 border: 1px solid rgba(110, 231, 183, 0.20);
                 border-radius: 12px;
             }
-            QLabel#unreservedName {
+            /* Unverified rows: same card, plus a 3px amber edge on the left */
+            QWidget#reservedRowUnverified {
+                background-color: rgba(251, 191, 36, 0.06);
+                border: 1px solid rgba(251, 191, 36, 0.28);
+                border-left: 3px solid #FBBF24;
+                border-radius: 12px;
+            }
+            QLabel#reservedName {
                 font-size: 13px; font-weight: 700; color: #E8F5EE;
                 background: transparent; border: none;
             }
-            QLabel#reservedName {
-                font-size: 13px; font-weight: 700; color: red;
-                background: transparent; border: none;
+
+            /* Status badges: the text says the status, the colour only backs it up */
+            QLabel#reservedBadgeVerified {
+                background-color: rgba(110, 231, 183, 0.14);
+                border: 1px solid rgba(110, 231, 183, 0.40);
+                border-radius: 10px; padding: 0px 9px;
+                font-size: 11px; font-weight: 800; color: #B7F0D6;
+            }
+            QLabel#reservedBadgeUnverified {
+                background-color: rgba(251, 191, 36, 0.14);
+                border: 1px solid rgba(251, 191, 36, 0.50);
+                border-radius: 10px; padding: 0px 9px;
+                font-size: 11px; font-weight: 800; color: #FDE68A;
             }
             QLabel#reservedTime {
                 font-size: 12px; font-weight: 700; color: #9FC4B2;
@@ -604,27 +653,42 @@ class Reservation(QWidget):
         for entry in entries:
             name = entry.get("name")
             time_text = entry.get("time")
+            is_verified = entry.get("verified") == 1
 
+            # Each row works like a luggage tag: the name is printed plainly, and a small
+            # coloured sticker on the side says "checked" or "not checked yet". Why: the
+            # name stays clean and readable, while the status is a separate label that
+            # needs no prefix text and is spotted at a glance.
             row_widget = QWidget()
-            row_widget.setObjectName("reservedRow")
+            row_widget.setObjectName("reservedRow" if is_verified else "reservedRowUnverified")
             row_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
             row_layout = QHBoxLayout(row_widget)
             row_layout.setContentsMargins(12, 10, 12, 10)
             row_layout.setSpacing(10)
 
-            if entry["verified"] == 1:
-                name_label = QLabel(str(name))
-                name_label.setObjectName("unreservedName")
-            else:
-                name_label = QLabel("UNVERIFIED -" + str(name))
-                name_label.setObjectName("reservedName")
-            name_label.setWordWrap(True)
+            # Left side: name on top, time slot underneath, stacked in one small column
+            text_column = QVBoxLayout()
+            text_column.setContentsMargins(0, 0, 0, 0)
+            text_column.setSpacing(2)
+
+            name_label = ElidedLabel(str(name) if name else "Unknown user")
+            name_label.setObjectName("reservedName")
 
             time_label = QLabel("—" if not time_text else str(time_text))
             time_label.setObjectName("reservedTime")
-            time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
-            row_layout.addWidget(name_label, stretch=1)
-            row_layout.addWidget(time_label)
+            text_column.addWidget(name_label)
+            text_column.addWidget(time_label)
+
+            # Right side: the status badge, fixed height so its rounded ends stay round
+            badge = QLabel("Verified" if is_verified else "Unverified")
+            badge.setObjectName("reservedBadgeVerified" if is_verified else "reservedBadgeUnverified")
+            badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            badge.setFixedHeight(20)
+            if not is_verified:
+                badge.setToolTip("This booking hasn't been verified yet.")
+
+            row_layout.addLayout(text_column, stretch=1)
+            row_layout.addWidget(badge, alignment=Qt.AlignmentFlag.AlignVCenter)
 
             layout.insertWidget(layout.count() - 1, row_widget)
