@@ -143,7 +143,7 @@ class Menu:
         self.button2 = QPushButton("Reserve Facility")
         self.button3 = QPushButton("My Reservation")
         self.button4 = QPushButton("Facilities")
-        self.button5 = QPushButton("Suggestion/Feedback")
+        self.button5 = QPushButton("Suggestion/Feedback/Help")
         self.button6 = QPushButton("Logout")
 
         self.buttonList = [self.button1, self.button2, self.button3, self.button4, self.button5, self.button6]

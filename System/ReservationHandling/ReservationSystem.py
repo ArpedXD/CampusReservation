@@ -1,19 +1,17 @@
 import httpx
-import os
-from dotenv import load_dotenv
+
 import keyring
 from QtMain.Component.dependencies.DateSorter import sort_key
-load_dotenv()
-
+import System.config
 class ReservationSystem:
     async def requestReservartion(data : dict, error):
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 print(data)
-                response = await client.post(f"{os.getenv("REQUESTS")}/reservation/save",
+                response = await client.post(f"{System.config.REQUESTS}/reservation/save",
                     headers={
                         "Access": 
-                            f"{os.getenv("ACCESS")}",
+                            f"{System.config.ACCESS}",
                         "cookie":
                             keyring.get_password("credentials", "value")
                         },
@@ -32,10 +30,10 @@ class ReservationSystem:
     async def getReservation(payload: dict):
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.post(f"{os.getenv("REQUESTS")}/reservation/fetchreserved",
+                response = await client.post(f"{System.config.REQUESTS}/reservation/fetchreserved",
                     headers={
                         "Access": 
-                            f"{os.getenv("ACCESS")}",
+                            f"{System.config.ACCESS}",
                         "cookie":
                             keyring.get_password("credentials", "value")
                         },
@@ -46,7 +44,7 @@ class ReservationSystem:
 
                 if response.is_success:
                     value = response.json()
-                    return [{"name": x[2], "time": f"{x[3]}————{x[0]}{x[1]}", "verified": x[4]}for x in value]
+                    return [{"name": x[2], "time": f"{x[3]}    {x[0]} - {x[1]}", "verified": x[4]}for x in value]
         except httpx.ConnectError as e:
             raise e
         except Exception as e:

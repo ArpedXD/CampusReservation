@@ -1,14 +1,12 @@
 import httpx
-from dotenv import load_dotenv
-import os
-load_dotenv()
 import keyring
 from PySide6.QtWidgets import QApplication
+import System.config
 
 class RequestingClasses:
     def __init__(self):
-        self.link = os.getenv("REQUESTS")
-        self.ACCESS = os.getenv("ACCESS")
+        self.link = System.config.REQUESTS
+        self.ACCESS = System.config.ACCESS
         self.cookie = keyring.get_password("credentials", "value")
 
     async def loginRequest(self, username, password):
@@ -68,7 +66,7 @@ class RequestingClasses:
                 if response.is_success:
                     return response.json()
         except Exception as e:
-            print(str(e))
+            raise e
 
     async def getCredentials(self):
         try:
@@ -102,7 +100,7 @@ class RequestingClasses:
                 if response.is_success:
                     err.setText("please check your email")
         except Exception as e:
-            raise 
+            raise e
     async def deleteAccount(self):
         try:
             async with httpx.AsyncClient(timeout=10) as client:
@@ -118,7 +116,7 @@ class RequestingClasses:
                 if response.is_success:
                     return response.json()
         except Exception as e:
-            raise
+            raise e
 
     async def GetInformations(self):
         try:
@@ -135,7 +133,7 @@ class RequestingClasses:
                 if response.is_success:
                     return response.json()
         except Exception as e:
-            raise
+            raise e
 
     async def GetProfileReservation(self):
         try:
@@ -152,7 +150,7 @@ class RequestingClasses:
                 if response.is_success:
                     return response.json()
         except Exception as e:
-            raise
+            raise e
 
     async def SendFeedBack(self, message):
         try:
@@ -169,4 +167,4 @@ class RequestingClasses:
                 if response.is_success:
                     return response.json()
         except Exception as e:
-            raise
+            raise e

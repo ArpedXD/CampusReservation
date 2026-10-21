@@ -20,8 +20,14 @@ class AccountHandler:
             except httpx.ConnectError:
                 errorLabel.setText("Connection Error: Please check your internet connection or try again later.")
                 errorLabel.setVisible(True)
+            except httpx.HTTPStatusError as e:
+                try:
+                    errorLabel.setText(e.response.json().get("detail"))
+                except Exception as e:
+                    errorLabel.setText("Unknown Error has occured.")
+                errorLabel.setVisible(True)
             except Exception as e:
-                errorLabel.setText(str(e))
+                errorLabel.setText("Something went wrong! Please try again")
                 errorLabel.setVisible(True)
             finally:
                 submit.setEnabled(True)
@@ -47,7 +53,7 @@ class AccountHandler:
                         errorLabel.setText("Unknown Error has occured.")
                     errorLabel.setVisible(True)
             except Exception as e:
-                errorLabel.setText(str(e))
+                errorLabel.setText('unknown error...')
                 errorLabel.setVisible(True)
             finally:
                 submit.setEnabled(True)
@@ -103,9 +109,18 @@ class AccountHandler:
                 data = await self.reqClass.VerifyUser(err, Credentials)
             except (TypeError, ValueError) as e:
                 err.setText('Error;' + str(e))
+            except httpx.ConnectError:
+                err.setText("Connection Error: Please check your internet connection or try again later.")
+                err.setVisible(True)
+            except httpx.HTTPStatusError as e:
+                try:
+                    err.setText(e.response.json().get("detail"))
+                except Exception as e:
+                    err.setText("Unknown Error has occured.")
+                err.setVisible(True)
             except Exception as e:
                 print('reachs')
-                err.setText(f"An Error has Occured : {e.response.json().get("detail")}")
+                err.setText(f"Unknown error occured, please try again!")
             finally:
                 verify_btn.setEnabled(True)
         asyncio.create_task(_verify())
@@ -132,19 +147,19 @@ class AccountHandler:
         asyncio.create_task(_handleData())
 
     def handleProfileReservation(self):
-            async def _handleReservationData():
-                try:
-                    data = await self.reqClass.GetProfileReservation()
-                    if data is None:
-                        return
-                    app_instance = QApplication.instance()
-                    
-                    app_instance.mainwindow.main.profile.SetReservations(data)
-                except httpx.ConnectError:
-                    pass
-                except Exception as e:
-                    print(e.response.json().get("detail"))
-            asyncio.create_task(_handleReservationData())
+        async def _handleReservationData():
+            try:
+                data = await self.reqClass.GetProfileReservation()
+                if data is None:
+                    return
+                app_instance = QApplication.instance()
+                
+                app_instance.mainwindow.main.profile.SetReservations(data)
+            except httpx.ConnectError:
+                pass
+            except Exception as e:
+                print(e.response.json().get("detail"))
+        asyncio.create_task(_handleReservationData())
 
     def handleDelete(self, err):
         async def delete_data():
@@ -161,8 +176,14 @@ class AccountHandler:
                 window.mainSignal.emit("Form")
             except httpx.ConnectError:
                 err.setText("Connectivity Error...")
+            except httpx.HTTPStatusError as e:
+                try:
+                    err.setText(e.response.json().get("detail"))
+                except Exception as e:
+                    err.setText("Unknown Error has occured.")
+                err.setVisible(True)
             except Exception as e:
-                err.setText(e.response.json().get("detail"))
+                err.setText('Unknown Error occured. Please try again')
         asyncio.create_task(delete_data())
 
     def getusernames(self):
@@ -177,7 +198,7 @@ class AccountHandler:
             except httpx.ConnectError:
                 pass
             except Exception as e:
-                print(e.response.json().get("detail"))
+                pass
         asyncio.create_task(getusername())
 
     def sendFeedback(self, message, error):

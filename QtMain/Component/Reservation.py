@@ -76,7 +76,7 @@ class Reservation(QWidget):
 
         try:
             ReservationHandler.ValidateReservation(payload)
-            ReservationHandler.RequestReservation(payload, self._reservation_error)
+            ReservationHandler.RequestReservation(self.confirm_btn, payload, self._reservation_error)
         except WrongData as e:
             return self._reservation_error.setText(e.detail)
         
@@ -315,16 +315,16 @@ class Reservation(QWidget):
         self._reservation_error.setWordWrap(True)
         self._reservation_error.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        confirm_btn = QPushButton("Confirm")
-        confirm_btn.setObjectName("reservationConfirmButton")
-        confirm_btn.setMinimumHeight(42)
-        confirm_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        confirm_btn.clicked.connect(self._confirm_reservation)
+        self.confirm_btn = QPushButton("Confirm")
+        self.confirm_btn.setObjectName("reservationConfirmButton")
+        self.confirm_btn.setMinimumHeight(42)
+        self.confirm_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.confirm_btn.clicked.connect(self._confirm_reservation)
 
         buttons = QHBoxLayout()
         buttons.setContentsMargins(0, 0, 0, 0)
         buttons.setSpacing(12)
-        buttons.addWidget(confirm_btn)
+        buttons.addWidget(self.confirm_btn)
 
         # ── Assemble with stretch factors so inner sections scale with the card ──
         card_layout = QVBoxLayout(reserve_card)
@@ -674,7 +674,7 @@ class Reservation(QWidget):
             name_label = ElidedLabel(str(name) if name else "Unknown user")
             name_label.setObjectName("reservedName")
 
-            time_label = QLabel("—" if not time_text else str(time_text))
+            time_label = QLabel(" — " if not time_text else str(time_text))
             time_label.setObjectName("reservedTime")
 
             text_column.addWidget(name_label)

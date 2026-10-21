@@ -1,0 +1,134 @@
+{
+  "2nd Floor": {
+    "Dimasalang Hall": [
+      "Classroom DH 200",
+      "Classroom DH 201",
+      "Classroom DH 202",
+      "Classroom DH 203",
+      "Classroom DH 208",
+      "CITE Faculty",
+      "Com Lab 1"
+    ],
+    "Silang Hall": [
+      "Classroom SH 241",
+      "Classroom SH 242",
+      "Classroom SH 246"
+    ]
+  },
+  "3rd Floor": {
+    "Dimasalang Hall": [
+      "Classroom DH 300",
+      "Classroom DH 301",
+      "Classroom DH 302",
+      "Classroom DH 303",
+      "Classroom DH 308",
+      "Com Lab 2"
+    ],
+    "Phinma Hall": [
+      "Classroom PH 321",
+      "Classroom PH 322",
+      "Classroom PH 333",
+      "Classroom PH 335",
+      "Library"
+    ],
+    "Silang Hall": [
+      "MPR"
+    ]
+  },
+  "4th Floor": {
+    "Dimasalang Hall": [
+      "Classroom DH 400",
+      "Classroom DH 401",
+      "Classroom DH 402",
+      "Classroom DH 403",
+      "Classroom DH 408",
+      "Com Lab 3"
+    ],
+    "Phinma Hall": [
+      "Classroom PH 421",
+      "Classroom PH 424",
+      "Classroom PH 429",
+      "Classroom PH 430"
+    ],
+    "Silang Hall": [
+      "Classroom SH 441",
+      "Classroom SH 442",
+      "Classroom SH 443",
+      "Classroom SH 444",
+      "Classroom SH 445"
+    ]
+  },
+  "5th Floor": {
+    "Dimasalang Hall": [
+      "Com Lab 4",
+      "Classroom DH 500",
+      "Classroom DH 501",
+      "Classroom DH 502",
+      "Classroom DH 503",
+      "Classroom DH 508"
+    ],
+    "Phinma Hall": [
+      "Classroom PH 521",
+      "Classroom PH 532",
+      "Nursing Lab"
+    ],
+    "Silang Hall": [
+      "Classroom SH 541",
+      "Classroom SH 542",
+      "Classroom SH 543",
+      "Classroom SH 544",
+      "Classroom SH 545"
+    ]
+  },
+  "6th Floor": {
+    "Dimasalang Hall": [
+      "Classroom DH 600",
+      "Classroom DH 601",
+      "Classroom DH 602",
+      "Classroom DH 603",
+      "Classroom DH 604",
+      "Classroom DH 605"
+    ],
+    "Phinma Hall": [
+      "AVR",
+      "Microtel Lab",
+      "Banquet Hall",
+      "Mock Hotel",
+      "Classrooms"
+    ],
+    "Silang Hall": [
+      "Classroom SH 641",
+      "Classroom SH 642",
+      "Classroom SH 643",
+      "Classroom SH 644",
+      "Classroom SH 645"
+    ]
+  },
+  "7th Floor": {
+    "Dimasalang Hall": [
+      "Classroom DH 704"
+    ],
+    "Phinma Hall": [
+      "Gymnasium",
+      "Classroom PH 721",
+      "Classroom PH 722",
+      "Classroom PH 723"
+    ],
+    "Silang Hall": [
+      "Classroom SH 741",
+      "Classroom SH 742",
+      "Classroom SH 743",
+      "Classroom SH 744",
+      "Classroom SH 745"
+    ]
+  },
+  "8th Floor": {
+    "Silang Hall": [
+      "Classroom SH 841",
+      "Classroom SH 842",
+      "Classroom SH 843",
+      "Classroom SH 844",
+      "Classroom SH 845"
+    ]
+  }
+}

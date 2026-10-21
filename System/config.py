@@ -1,2 +1,2 @@
 REQUESTS="https://campusreservationbackend.vercel.app"
-ACCESS="9ndg" # Normal Access
+ACCESS="9ndg"

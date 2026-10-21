@@ -15,8 +15,9 @@ class ReservationHandler:
         if not re.fullmatch(date_format, payload["date"]):
             raise WrongData(detail="Date format is wrong, follow : MM-DD-YYYY")
         
-    def RequestReservation(payload : dict, error):
+    def RequestReservation(button, payload : dict, error):
         async def _requestReservation():
+            button.setEnabled(False)
             try:
                 await ReservationSystem.requestReservartion(payload, error)
             except httpx.ConnectError:
@@ -24,7 +25,9 @@ class ReservationHandler:
             except HTTPError as e:
                 return error.setText("Error : " + e.response.json().get("detail"))
             except Exception as e:
-                raise error.setText("Error : An Unknown Error OCrrued")
+                raise error.setText("Error : An Unknown Error Occured")
+            finally:
+                button.setEnabled(True)
         asyncio.create_task(_requestReservation())
 
     def GetReservation(payload : dict, reservation):
