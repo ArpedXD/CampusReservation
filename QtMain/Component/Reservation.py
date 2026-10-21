@@ -45,9 +45,9 @@ class Reservation(QWidget):
         super().__init__(container)
         self.container = container
         self.reservation_child = None
-        self.reservation_info = {}
         self.ReservationWidget()
         self.info = {}
+        self._reservation_info = {}
         
     def open_reservation_form(self, info: dict):
         self._reservation_info = info or {}
