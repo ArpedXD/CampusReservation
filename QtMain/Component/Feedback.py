@@ -446,13 +446,7 @@ class FeedbackPanel(NeonFrame):
 
         self._set_busy(True)
         QApplication.processEvents()          # repaint "SENDING…" before a blocking call
-        try:
-            result =  AccountHandler().sendFeedback(self.input.toPlainText(), self.err)
-        except Exception as exc:              # network down, server error, etc.
-            self._set_busy(False)
-            self._fail("Couldn't send your feedback. Check your connection and try again.")
-            print(f"[Feedback] send failed: {exc}")
-            return
+        result =  AccountHandler().sendFeedback(self.input.toPlainText(), self.err)
         self._set_busy(False)
 
         # the backend may have reported its own error through the label

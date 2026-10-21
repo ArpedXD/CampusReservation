@@ -180,7 +180,7 @@ class Home(QWidget):
         f2 = AccentCard(
             "HOW IT WORKS",
             "Reserve in three steps",
-            ["Choose a facility", "Pick a date and time", "Confirm your booking"],
+            ["Choose a facility", "Pick a date and time", "Confirm your booking", "Wait for your confirmation of Booking"],
         )
         f3 = ImageCard(
             "resources/RoomIMG/Library.jpg",
