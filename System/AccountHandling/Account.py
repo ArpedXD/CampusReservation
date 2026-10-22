@@ -68,6 +68,7 @@ class AccountHandler:
 
                 if data is None:
                     return
+
                 app_instance = QApplication.instance()
 
                 window = app_instance.mainwindow

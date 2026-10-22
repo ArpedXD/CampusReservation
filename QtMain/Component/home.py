@@ -11,7 +11,7 @@ STYLE = """
         background: transparent;
     }
     #HeroSub {
-        color: rgba(255,255,255,0.90); font-size: 14px;
+        color: rgba(255,255,255,0.60); font-size: 14px;
         background: transparent;
     }
 

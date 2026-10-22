@@ -66,6 +66,7 @@ class RequestingClasses:
                 if response.is_success:
                     return response.json()
         except Exception as e:
+            print(e)
             raise e
 
     async def getCredentials(self):

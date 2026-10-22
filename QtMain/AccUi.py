@@ -44,7 +44,7 @@ class Form(QObject):
 
         leftPanel = QWidget()
         leftPanel.setObjectName("LeftPanel")
-        leftPanel.setStyleSheet("#LeftPanel { background-color: #FFFFFF; }")
+        leftPanel.setStyleSheet("#LeftPanel { background-color: #FFFFFF; border: none}")
 
         leftLayout = QVBoxLayout(leftPanel)
         leftLayout.setContentsMargins(64, 48, 64, 48)
@@ -57,7 +57,7 @@ class Form(QObject):
             color: {INK};
             font-size: 20px;
             font-weight: 700;
-            font-family: Segoe Script;
+            font-family: Bold;
         """)
         brandimg = QLabel()
         brandimg.setFixedSize(50,50)
@@ -90,25 +90,13 @@ class Form(QObject):
         rightPanel = QWidget()
         
         rightPanel.setObjectName("RightPanel")
-        rightPanel.setStyleSheet("""
-            #RightPanel {
-                background: qlineargradient(
-                    spread: pad,
-                    x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 rgba(255, 255, 255, 190),
-                    stop: 0.35 rgba(175, 212, 104, 200),
-                    stop: 0.7 rgba(87, 199, 133, 225),
-                    stop: 1 rgba(42, 123, 155, 240)
-                );
-            }
-        """)
         rightpanelimg = QLabel()
         rightPanellayout = QVBoxLayout(rightPanel)
         rightPanellayout.setSpacing(0)
         rightPanellayout.setContentsMargins(0, 0, 0, 0)
         rightPanellayout.addWidget(rightpanelimg)
         rightpanelimg.setScaledContents(True)
-        schoolLogo = QPixmap("resources/School.png")
+        schoolLogo = QPixmap("resources/School2.png")
         rightpanelimg.setPixmap(schoolLogo)
 
         rightLayout = QVBoxLayout(rightpanelimg)
@@ -140,7 +128,7 @@ class Form(QObject):
         rightLayout.addLayout(imageRow)
         
         mainLayout.addWidget(leftPanel, 1)
-        mainLayout.addWidget(rightPanel, 1)
+        mainLayout.addWidget(rightPanel, 2)
 
         return container
 
@@ -224,7 +212,7 @@ class Form(QObject):
             color: {INK};
             font-size: 22px;
             font-weight: 700;
-            font-family: Segoe Script ;
+            font-family: Bold ;
         """)
         headingSub = QLabel("Sign in to continue to your PhinmaEd account.")
         headingSub.setWordWrap(True)
@@ -335,7 +323,7 @@ class Form(QObject):
             color: {INK};
             font-size: 22px;
             font-weight: 700;
-            font-family: Segoe Script;
+            font-family: Bold;
         """)
         headingSub = QLabel("Use your Phinmaed Gmail to get started.")
         headingSub.setWordWrap(True)

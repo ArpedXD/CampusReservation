@@ -181,39 +181,10 @@ class NeonFrame(QWidget):
         path.closeSubpath()
         return path
 
-    def paint_content(self, p: QPainter, path: QPainterPath) -> None:
-        """Override to paint inside the (clipped) panel shape."""
-
-    def paintEvent(self, _event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        path = self._shape()
-
-        # 1) panel fill
-        p.fillPath(path, self.FILL)
-
-        # 2) subclass content (clipped to the shape)
-        p.save()
-        p.setClipPath(path)
-        self.paint_content(p, path)
-        p.restore()
-
-        # 3) neon border: wide faint stroke -> medium -> crisp core
-        r = self.rect()
-        for width, alpha in ((8, 22), (5, 50), (2, 255)):
-            grad = QLinearGradient(r.topLeft().toPointF(), r.bottomRight().toPointF())
-            grad.setColorAt(0.0, _with_alpha(MINT, alpha))
-            grad.setColorAt(1.0, _with_alpha(CYAN, alpha))
-            pen = QPen(grad, width)
-            pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-            p.strokePath(path, pen)
-        p.end()
-
-
 # --------------------------------------------------------------------------
 # QWidget #1 - image
 # --------------------------------------------------------------------------
-class ImagePanel(NeonFrame):
+class ImagePanel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._pixmap = QPixmap()
@@ -223,49 +194,10 @@ class ImagePanel(NeonFrame):
     def set_image(self, source) -> None:
         """Accepts a file path or a QPixmap."""
         self._pixmap = source if isinstance(source, QPixmap) else QPixmap(source)
-        self.update()
+        self.se
 
     def sizeHint(self) -> QSize:
         return QSize(420, 200)
-
-    def paint_content(self, p: QPainter, path: QPainterPath) -> None:
-        bounds = path.boundingRect()
-
-        if self._pixmap.isNull():
-            # placeholder until the school image is supplied
-            bg = QLinearGradient(bounds.topLeft(), bounds.bottomRight())
-            bg.setColorAt(0, QColor("#06251a"))
-            bg.setColorAt(1, QColor("#0a3a29"))
-            p.fillPath(path, bg)
-            p.setPen(QColor(TEXT_MUTED))
-            f = QFont("Consolas", 11)
-            f.setBold(True)
-            f.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 2)
-            p.setFont(f)
-            p.drawText(bounds, Qt.AlignmentFlag.AlignCenter, "")
-        else:
-            # "cover" fit: fill the panel, centre-crop the overflow
-            scaled = self._pixmap.scaled(
-                bounds.size().toSize(),
-                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-            x = bounds.center().x() - scaled.width() / 2
-            y = bounds.center().y() - scaled.height() / 2
-            p.drawPixmap(int(x), int(y), scaled)
-
-            # fade into the theme at the bottom edge
-            fade = QLinearGradient(bounds.topLeft(), bounds.bottomLeft())
-            fade.setColorAt(0.55, QColor(4, 17, 12, 0))
-            fade.setColorAt(1.0, QColor(4, 17, 12, 190))
-            p.fillRect(bounds, fade)
-
-        # faint CRT scanlines for the cyberpunk feel
-        p.setPen(QPen(QColor(0, 0, 0, 38), 1))
-        y = int(bounds.top())
-        while y < bounds.bottom():
-            p.drawLine(int(bounds.left()), y, int(bounds.right()), y)
-            y += 3
 
 
 # --------------------------------------------------------------------------
@@ -474,8 +406,6 @@ class Feedback(QWidget):
         self.setStyleSheet(STYLESHEET)
         self.setMinimumSize(380, 560)
 
-        self.image_panel = ImagePanel()
-        self.image_panel.set_image("resources/School.png")
         self.feedback_panel = FeedbackPanel()
         self.input = self.feedback_panel.input
         self.submit_btn = self.feedback_panel.submit_btn
@@ -484,14 +414,12 @@ class Feedback(QWidget):
         scroll_area.setWidgetResizable(True)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 16)
         root.setSpacing(12)
 
         scroll_widget = QWidget()
         scroll_area.setWidget(scroll_widget)
 
         scroll_areaL = QVBoxLayout(scroll_widget)
-        scroll_areaL.addWidget(self.image_panel, 2)
         scroll_areaL.addWidget(self.feedback_panel, 3)
 
         root.addWidget(scroll_area)

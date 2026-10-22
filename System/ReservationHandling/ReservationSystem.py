@@ -1,8 +1,8 @@
 import httpx
-
+import asyncio
 import keyring
-from QtMain.Component.dependencies.DateSorter import sort_key
 import System.config
+
 class ReservationSystem:
     async def requestReservartion(data : dict, error):
         try:
@@ -20,6 +20,8 @@ class ReservationSystem:
 
                 response.raise_for_status()
                 if response.is_success:
+                    error.setText("Success!")
+                    await asyncio.sleep(2)
                     error.setText("")
                     return
         except httpx.ConnectError as e:
