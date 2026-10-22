@@ -16,6 +16,9 @@ class AccountHandler:
             submit.setText("Logging in...")
             try:
                 await self.reqClass.loginRequest(username.text(), password.text())
+                app_instance = QApplication.instance()
+                window = app_instance.mainwindow
+                window.form.toast()
                 self.handleInformations()
             except httpx.ConnectError:
                 errorLabel.setText("Connection Error: Please check your internet connection or try again later.")
@@ -27,7 +30,7 @@ class AccountHandler:
                     errorLabel.setText("Unknown Error has occured.")
                 errorLabel.setVisible(True)
             except Exception as e:
-                errorLabel.setText("Something went wrong! Please try again")
+                errorLabel.setText("Something went wrong! Please try again" + str(e))
                 errorLabel.setVisible(True)
             finally:
                 submit.setEnabled(True)
@@ -42,6 +45,9 @@ class AccountHandler:
             errorLabel.setVisible(False)
             try:
                 await self.reqClass.signupRequest(username.text(), password.text())
+                app_instance = QApplication.instance()
+                window = app_instance.mainwindow
+                window.form.toast()
                 self.handleInformations()
             except httpx.ConnectError:
                 errorLabel.setText("Connection Error: Please check your internet connection or try again later.")
@@ -65,19 +71,22 @@ class AccountHandler:
         async def _handleInformations():
             try:
                 data = await self.reqClass.isLoggedIn()
+                app_instance = QApplication.instance()
+                window = app_instance.mainwindow
 
                 if data is None:
                     return
 
-                app_instance = QApplication.instance()
-
-                window = app_instance.mainwindow
                 window.mainSignal.emit("DoubleColumn")
 
                 if window.main is not None:
                     window.main.updateVerificationOverlay(data["Verified"])
             except Exception as e:
                 print(str(e))
+            finally:
+                app_instance = QApplication.instance()
+                window = app_instance.mainwindow
+                window.form.toastDelete()
         asyncio.create_task(_handleInformations())
 
     def handleVerify(self, first_name, last_name, year_level, college_course, student_id, err, verify_btn):
@@ -120,7 +129,6 @@ class AccountHandler:
                     err.setText("Unknown Error has occured.")
                 err.setVisible(True)
             except Exception as e:
-                print('reachs')
                 err.setText(f"Unknown error occured, please try again!")
             finally:
                 verify_btn.setEnabled(True)

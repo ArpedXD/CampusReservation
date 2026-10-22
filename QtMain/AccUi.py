@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QStackedWidget, QPushButton, QLineEdit, QSizePolicy
-from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtCore import Qt, Signal, QObject, QTimer
 from PySide6.QtGui import QPixmap
 
 from System.AccountHandling.Account import AccountHandler
@@ -27,6 +27,100 @@ class Form(QObject):
             "student_id" : None,
         }
         self.navigation.connect(self.connection)
+
+        self.loader = QWidget()
+        self.toastDelete()
+        self.container.resizeEvent = self.resizeFilter
+
+    def toastDelete(self):
+        self.loader.deleteLater()
+
+    def toast(self, messages=None):
+        parent = self.container
+        # Edit these to match what is actually loading; the last one stays on screen
+        messages = messages or [
+            "Getting things ready",
+            "Fetching your data",
+            "Putting it all together",
+            "Almost there",
+            "Still working, thanks for waiting",
+        ]
+
+        self.loader = QWidget(parent)
+        self.loader.setStyleSheet("background-color:rgba(255,255,255, 0.8);")
+        self.loader.setFixedSize(int(self.container.width()), int(self.container.height()))
+
+        self.loading = QWidget(self.loader)
+        self.loading.setObjectName("widg")
+        self.loading.setStyleSheet("#widg{background-color:white; border: 1px solid black}")
+
+        # Text: one status message at a time
+        self.loading_text = QLabel(messages[0], self.loading)
+        self.loading_text.setAlignment(Qt.AlignCenter)
+        self.loading_text.setWordWrap(True)
+        self.loading_text.setStyleSheet(
+            "background:transparent; color:#222; font-size:16px; font-weight:600;"
+        )
+
+        # Movement: a bar sweeping through a track (the track clips the bar)
+        self.loading_track = QWidget(self.loading)
+        self.loading_track.setStyleSheet("background-color:#e6e6e6;")
+        self.loading_bar = QWidget(self.loading_track)
+        self.loading_bar.setStyleSheet("background-color:red;")
+
+        self._tick = 0
+
+        def layoutE():
+            lw, lh = self.loader.width(), self.loader.height()
+
+            # A quarter of the loader, but never so small that the text gets squashed
+            w = min(max(int(lw / 4), 240), lw)
+            h = min(max(int(lh / 4), 120), lh)
+            self.loading.setFixedSize(w, h)
+
+            # Centre: half of the leftover space on each side
+            self.loading.move((lw - w) // 2, (lh - h) // 2)
+
+            margin = max(int(w * 0.08), 12)
+            track_h = 4
+            inner_w = max(w - margin * 2, 1)
+
+            self.loading_text.setGeometry(margin, 0, inner_w, h - margin)
+            self.loading_track.setGeometry(margin, h - margin - track_h, inner_w, track_h)
+            self.loading_bar.setFixedSize(max(int(inner_w * 0.3), 1), track_h)
+
+        def step():
+            self._tick += 1
+
+            # Sweep: enters from the left edge, exits at the right, then repeats (~1.2s)
+            period = 75
+            t = (self._tick % period) / period
+            bar_w = self.loading_bar.width()
+            track_w = self.loading_track.width()
+            self.loading_bar.move(int(-bar_w + (track_w + bar_w) * t), 0)
+
+            # Message: advance every ~1.8s, then hold on the last one
+            index = min(self._tick // 110, len(messages) - 1)
+            if self.loading_text.text() != messages[index]:
+                self.loading_text.setText(messages[index])
+
+        def loadE(event):
+            layoutE()
+
+        self.loader.resizeEvent = loadE
+
+        # Parented to the loader, so the timer is destroyed together with it
+        self.loading_timer = QTimer(self.loader)
+        self.loading_timer.timeout.connect(step)
+        self.loading_timer.start(16)  # ~60 fps
+
+        layoutE()
+        self.loader.show()
+        self.loader.raise_()
+
+    def resizeFilter(self, event):
+        if self.loader:
+            self.loader.setFixedSize(int(self.container.width()), int(self.container.height()))
 
     def containers(self):
         container = self.container
@@ -130,6 +224,7 @@ class Form(QObject):
         mainLayout.addWidget(leftPanel, 1)
         mainLayout.addWidget(rightPanel, 2)
 
+        self.toast()
         return container
 
     def buttons(self, parent, types):

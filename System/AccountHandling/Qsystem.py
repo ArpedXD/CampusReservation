@@ -24,7 +24,6 @@ class RequestingClasses:
 
                 if response.is_success:
                     value = response.json()
-                    print("YAY")
                     keyring.set_password("credentials", "value", value["cookie"])
         except httpx.HTTPStatusError as e:
             raise e

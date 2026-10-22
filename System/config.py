@@ -1,4 +1,4 @@
-REQUESTS="http://127.0.0.1:8000 "
+REQUESTS="https://campusreservationbackend.vercel.app"
 ACCESS="9ndg"
 
 
