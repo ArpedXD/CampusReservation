@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QVBoxLayout, QStackedWidget, QPushButton, QLineEdit, QSizePolicy
 from PySide6.QtCore import Qt, Signal, QObject, QTimer
 from PySide6.QtGui import QPixmap
-
+from shiboken6 import isValid
 from System.AccountHandling.Account import AccountHandler
 
 # ---- shared design tokens ----------------------------------------------
@@ -119,7 +119,7 @@ class Form(QObject):
         self.loader.raise_()
 
     def resizeFilter(self, event):
-        if self.loader:
+        if self.loader and isValid(self.loader):
             self.loader.setFixedSize(int(self.container.width()), int(self.container.height()))
 
     def containers(self):

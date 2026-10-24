@@ -25,7 +25,7 @@ class AccountHandler:
                 errorLabel.setVisible(True)
             except httpx.HTTPStatusError as e:
                 try:
-                    errorLabel.setText(e.response.json().get("detail"))
+                    errorLabel.setText(e.response.json().get("detail") or e.response.json().get("error") or e.response.json().get("detail"))
                 except Exception as e:
                     errorLabel.setText("Unknown Error has occured.")
                 errorLabel.setVisible(True)
@@ -54,7 +54,7 @@ class AccountHandler:
                 errorLabel.setVisible(True)
             except httpx.HTTPStatusError as e:
                     try:
-                        errorLabel.setText(e.response.json().get("detail"))
+                        errorLabel.setText(e.response.json().get("detail") or e.response.json().get("error"))
                     except Exception as e:
                         errorLabel.setText("Unknown Error has occured.")
                     errorLabel.setVisible(True)
