@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1200,600)
         self.showMaximized()
         self.stack = QStackedWidget()
-        self.nav_name = QLabel("John")
+        self.nav_name = QLabel("[Name]")
         self.form = Form()
         self.main = None
 
