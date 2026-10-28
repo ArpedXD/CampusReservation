@@ -213,13 +213,18 @@ class AccountHandler:
     def sendFeedback(self, message, error):
         async def _sendFeedback():
             try:
-                data = await self.reqClass.SendFeedBack(message)
-                if data is None:
-                    return
+                # SendFeedBack raises on any HTTP error (raise_for_status), so getting
+                # here means the server accepted it. The endpoint returns an empty (null)
+                # body on success, so don't treat a None body as a failure.
+                await self.reqClass.SendFeedBack(message)
+                return True
             except httpx.ConnectError:
                 error.setText("Please check your internet connection.")
+                return False
             except httpx.HTTPStatusError as e:
                 error.setText(e.response.json().get("detail"))
+                return False
             except Exception as e:
                 error.setText("Something went wrong!")
-        asyncio.create_task(_sendFeedback())
+                return False
+        return asyncio.create_task(_sendFeedback())

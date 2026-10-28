@@ -23,7 +23,10 @@ class ReservationHandler:
             except httpx.ConnectError:
                 return error.setText("Error: Please check your internet connection.")
             except HTTPError as e:
-                return error.setText("Error : " + e.response.json().get("detail")  or e.response.json().get("error"))
+                try:
+                    return error.setText("Error : " + e.response.json().get("detail"))
+                except: 
+                    return error.setText("Error : " + e.response.json().get("error"))
             except Exception as e:
                 raise error.setText("Error : An Unknown Error Occured")
             finally:

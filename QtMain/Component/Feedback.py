@@ -15,6 +15,7 @@ Public hooks:
     widget.submit_btn    (QPushButton)
     widget.feedback_panel.err   (StatusLabel) -> inline error / success message
 """
+import asyncio
 import sys
 from System.AccountHandling.Account import AccountHandler
 
@@ -368,6 +369,9 @@ class FeedbackPanel(NeonFrame):
 
     # ---- main action -----------------------------------------------------
     def submit(self) -> None:
+        if not self.submit_btn.isEnabled():   # a request is already in flight
+            return
+
         text = self.input.toPlainText().strip()
         self.err.clear_status()
 
@@ -377,22 +381,34 @@ class FeedbackPanel(NeonFrame):
             return
 
         self._set_busy(True)
-        QApplication.processEvents()          # repaint "SENDING…" before a blocking call
-        result =  AccountHandler().sendFeedback(self.input.toPlainText(), self.err)
-        self._set_busy(False)
+        # sendFeedback() returns an asyncio.Task right away, so the outcome is only
+        # known once it finishes. Wait for it in a coroutine instead of guessing.
+        asyncio.create_task(self._send(text))
 
-        # the backend may have reported its own error through the label
-        if result is False or self.err.isVisible():
-            if not self.err.isVisible():
-                self._fail("Something went wrong while sending. Please try again.")
+    async def _send(self, text: str) -> None:
+        sent = False
+        try:
+            sent = bool(await AccountHandler().sendFeedback(text, self.err))
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            # e.g. the backend's own error handling failed on an unexpected response
+            sent = False
+
+        try:
+            self._set_busy(False)
+            if sent:
+                self.input.clear()
+                self._set_invalid(False)
+                self.err.show_success("Thank you! Your feedback has been sent.")
             else:
-                self._set_invalid(True)
+                # keep the user's message so they can retry; the backend usually sets
+                # its own message on the label, so only add a generic one if it didn't
+                if self.err.isHidden():
+                    self.err.show_error("Something went wrong while sending. Please try again.")
                 self.input.setFocus()
-            return
-
-        self.input.clear()
-        self._set_invalid(False)
-        self.err.show_success("Thank you! Your feedback has been sent.")
+        except RuntimeError:
+            pass    # the widget was destroyed while the request was running
 
 
 # --------------------------------------------------------------------------
