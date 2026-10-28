@@ -6,7 +6,7 @@ import System.config
 class ReservationSystem:
     async def requestReservartion(data : dict, error):
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 print(data)
                 response = await client.post(f"{System.config.REQUESTS}/reservation/save",
                     headers={
@@ -31,7 +31,7 @@ class ReservationSystem:
 
     async def getReservation(payload: dict):
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(f"{System.config.REQUESTS}/reservation/fetchreserved",
                     headers={
                         "Access": 

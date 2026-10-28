@@ -133,13 +133,8 @@ class Profile(QWidget):
         info.addLayout(chips)
         info.addStretch(1)
 
-        role = QLabel("STUDENT")
-        role.setObjectName("profileRole")
-        role.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         header_row.addWidget(avatar, alignment=Qt.AlignmentFlag.AlignVCenter)
         header_row.addLayout(info, stretch=1)
-        header_row.addWidget(role, alignment=Qt.AlignmentFlag.AlignTop)
 
         # ── Body: scrollable plate that holds the reservation cards ──────────
         scroll = QScrollArea()

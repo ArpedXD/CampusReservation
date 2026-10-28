@@ -105,9 +105,9 @@ class AccountHandler:
 
         if not re.match(student_id_format, Credentials["student_id"]):
             if re.search(r'[^0-9\-]', Credentials["student_id"]):
-                err.setText("Error: Please follow '00-0000-0000' format!") 
+                err.setText("Error: Please follow '00-0000-000000' format!") 
                 return
-            err.setText("Error: Please follow '00-0000-00000' format!") 
+            err.setText("Error: Please follow '00-0000-000000' format!") 
             return
         
         async def _verify():

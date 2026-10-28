@@ -13,7 +13,7 @@ class RequestingClasses:
         datas = {"username": username, "password": password}
         self.cookie = keyring.get_password("credentials", "value")
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(f"{self.link}/account/login",
                     headers={
                         "Access": 
@@ -31,7 +31,7 @@ class RequestingClasses:
         datas = {"username": mail, "password": password}
         self.cookie = keyring.get_password("credentials", "value")
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(f"{self.link}/account/signup",
                     headers={
                         "Access": f"{self.ACCESS}"
@@ -87,7 +87,7 @@ class RequestingClasses:
 
     async def VerifyUser(self, err, Credentials : dict):
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(f"{self.link}/account/verify", headers={
                     "Access": 
                         f"{self.ACCESS}",
@@ -103,7 +103,7 @@ class RequestingClasses:
             raise e
     async def deleteAccount(self):
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.get(f"{self.link}/account/delete", headers={
                     "Access":
                         f"{self.ACCESS}",
@@ -120,7 +120,7 @@ class RequestingClasses:
 
     async def GetInformations(self):
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.get(f"{self.link}/account/getinformations", headers={
                     "Access":
                         f"{self.ACCESS}",
@@ -137,7 +137,7 @@ class RequestingClasses:
 
     async def GetProfileReservation(self):
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=20) as client:
                 response = await client.get(f"{self.link}/account/getSelfReservation", headers={
                     "Access":
                         f"{self.ACCESS}",
@@ -154,7 +154,7 @@ class RequestingClasses:
 
     async def SendFeedBack(self, message):
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(f"{self.link}/account/sendMessage", headers={
                     "Access":
                         f"{self.ACCESS}",
